@@ -13,11 +13,14 @@ task getDependencies {
 }
 
 task build {
-    onlyIf { host.debianBuilder.enabled }
+  onlyIf { host.debianBuilder.enabled }
+  dependsOn getDependencies, gradle.includedBuild('testatecc508a').task(':build')
 }
 
 task test {
+  dependsOn gradle.includedBuild('testatecc508a').task(':test')
 }
 
 task clean {
+  dependsOn gradle.includedBuild('testatecc508a').task(':clean')
 }
