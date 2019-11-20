@@ -1,8 +1,6 @@
 /**
  ********************************************************************************************************
  * @file        ockam_kal.h
- * @author      Mark Mulrooney <mark@ockam.io>
- * @copyright   Copyright (c) 2019, Ockam Inc.
  * @brief   
  ********************************************************************************************************
  */
@@ -55,10 +53,10 @@
  */
 
 typedef enum {
-    OCKAM_KAL_OPT_NONE              = 0x00,                     /*!< No option specified                                */
-    OCKAM_KAL_OPT_BLOCKING          = 0x00,                     /*!< Make a blocking call (default)                     */
-    OCKAM_KAL_OPT_NON_BLOCKING      = 0x01,                     /*!< Make a non-blocking call, if applicable            */
-    OCKAM_KAL_OPT_NO_SCHED          = 0x02,                     /*!< Don't run the scheduler, if applicable             */
+    OCKAM_KAL_OPT_NONE = 0x00,                                  /*!< No option specified                                */
+    OCKAM_KAL_OPT_BLOCKING = 0x00,                              /*!< Make a blocking call (default)                     */
+    OCKAM_KAL_OPT_NON_BLOCKING = 0x01,                          /*!< Make a non-blocking call, if applicable            */
+    OCKAM_KAL_OPT_NO_SCHED = 0x02,                              /*!< Don't run the scheduler, if applicable             */
 } OCKAM_KAL_OPT;
 
 
@@ -117,11 +115,11 @@ OCKAM_ERR  ockam_kal_mutex_init (OCKAM_KAL_MUTEX *p_mutex);
 OCKAM_ERR  ockam_kal_mutex_free (OCKAM_KAL_MUTEX *p_mutex);
 
 OCKAM_ERR  ockam_kal_mutex_lock (OCKAM_KAL_MUTEX *p_mutex,
-                                   OCKAM_KAL_OPT opt, 
-                                   uint32_t timeout_ms);
+                                 OCKAM_KAL_OPT opt, 
+                                 uint32_t timeout_ms);
 
 OCKAM_ERR  ockam_kal_mutex_unlock (OCKAM_KAL_MUTEX *p_mutex,
-                                  OCKAM_KAL_OPT opt);
+                                   OCKAM_KAL_OPT opt);
 
 
 /*
