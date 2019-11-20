@@ -1,4 +1,4 @@
-rootProject.name = 'testatecc508a'
+rootProject.name = 'atecc508a'
 
 boolean inComposite = gradle.parent != null
 if (!inComposite) {
