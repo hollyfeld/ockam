@@ -2,6 +2,6 @@ rootProject.name = 'atecc508a'
 
 boolean inComposite = gradle.parent != null
 if (!inComposite) {
-  includeBuild '../../../../../tools/gradle/plugins/host'
-  includeBuild '../../../../../tools/gradle/plugins/builder'
+  includeBuild '../../../../../../tools/gradle/plugins/host'
+  includeBuild '../../../../../../tools/gradle/plugins/builder'
 }
