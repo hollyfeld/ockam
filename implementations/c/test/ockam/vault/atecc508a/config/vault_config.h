@@ -1,14 +1,12 @@
 /**
  ********************************************************************************************************
- * @file        ockam_vault_cfg.h
- * @author      Mark Mulrooney <mark@ockam.io>
- * @copyright   Copyright (c) 2019, Ockam Inc.
+ * @file        vault_config.h
  * @brief   
  ********************************************************************************************************
  */
 
-#ifndef OCKAM_VAULT_CFG_H_
-#define OCKAM_VAULT_CFG_H_
+#ifndef VAULT_CONFIG_H_ 
+#define VAULT_CONFIG_H_ 
 
 
 /*

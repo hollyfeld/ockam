@@ -22,6 +22,12 @@
 #include <cryptoauthlib/lib/atca_iface.h>
 #include <cryptoauthlib/lib/atca_device.h>
 
+#if !defined(OCKAM_VAULT_CONFIG_FILE)
+#error "Error: Ockam Vault Config File Missing"
+#else
+#include OCKAM_VAULT_CONFIG_FILE
+#endif
+
 
 /*
  ********************************************************************************************************

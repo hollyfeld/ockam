@@ -18,6 +18,12 @@
 #include <ockam/error.h>
 #include <ockam/kal.h>
 
+#if !defined(OCKAM_VAULT_CONFIG_FILE)
+#error "Error: Ockam Vault Config File Missing"
+#else
+#include OCKAM_VAULT_CONFIG_FILE
+#endif
+
 
 /*
  ********************************************************************************************************

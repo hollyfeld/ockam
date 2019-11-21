@@ -61,13 +61,19 @@ set(CMAKE_VERBOSE_MAKEFILE TRUE)
 # Set include directories #
 ###########################
 
-set(TEST_INC ${TEST_CFG_DIR})
 set(TEST_INC ${TEST_INC} ${OCKAM_INC_DIR})
 set(TEST_INC ${TEST_INC} ${THIRD_PARTY_DIR}/microchip)
 set(TEST_INC ${TEST_INC} ${THIRD_PARTY_DIR}/microchip/cryptoauthlib/lib)
 set(TEST_INC ${TEST_INC} ${THIRD_PARTY_DIR}/microchip/cryptoauthlib/lib/hal)
 
 include_directories(${TEST_INC})
+
+
+####################
+# Set config files #
+####################
+
+add_definitions(-DOCKAM_VAULT_CONFIG_FILE="${TEST_CFG_DIR}/vault_config.h")
 
 
 ###########################
