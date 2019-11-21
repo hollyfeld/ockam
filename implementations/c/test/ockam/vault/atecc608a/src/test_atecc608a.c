@@ -127,7 +127,7 @@ void main (void)
     /* Vault Init */
     /* ---------- */
 
-    err = ockam_vault_init((void*) &atecc608a_cfg);             /* Initialize Vault                                     */
+    err = ockam_vault_init((void*) &atecc608a_cfg);             /* Initialize Vault                                   */
     if(err != OCKAM_ERR_NONE) {
         printf("Error: Ockam Vauilt Init failed\r\n");
     }
@@ -136,7 +136,7 @@ void main (void)
     /* Random Number Generation */
     /* ------------------------ */
 
-    err = ockam_vault_random(&rand_num,                         /* Generate a random number                             */
+    err = ockam_vault_random(&rand_num,                         /* Generate a random number                           */
                              TEST_ATECC608A_RAND_NUM_SIZE);
     if(err != OCKAM_ERR_NONE) {
         printf("Error: Ockam Vault Random failed\r\n");
@@ -157,14 +157,14 @@ void main (void)
 
     //TODO base this off config??
 
-    err = ockam_vault_key_gen(OCKAM_VAULT_KEY_STATIC,           /* Generate a static key                                */
+    err = ockam_vault_key_gen(OCKAM_VAULT_KEY_STATIC,           /* Generate a static key                              */
                               &key_static[0],
                               TEST_ATECC608A_PUB_KEY_SIZE);
     if(err != OCKAM_ERR_NONE) {
         printf("Error: Ockam Vault Static Key Generate Failed\r\n");
     }
 
-    err = ockam_vault_key_gen(OCKAM_VAULT_KEY_EPHEMERAL,        /* Generate an ephemrmal key                            */ 
+    err = ockam_vault_key_gen(OCKAM_VAULT_KEY_EPHEMERAL,        /* Generate an ephemrmal key                          */ 
                               &key_static[0],
                               TEST_ATECC608A_PUB_KEY_SIZE);
     if(err != OCKAM_ERR_NONE) {
@@ -175,14 +175,14 @@ void main (void)
     /* Key Retrival */
     /* ------------ */
 
-    err = ockam_vault_key_get_pub(OCKAM_VAULT_KEY_STATIC,       /* Get the static public key                            */
+    err = ockam_vault_key_get_pub(OCKAM_VAULT_KEY_STATIC,       /* Get the static public key                          */
                                   &key_static[0],
                                   TEST_ATECC608A_PUB_KEY_SIZE);
     if(err != OCKAM_ERR_NONE) {
         printf("Error: Ockam Vault Get Static Public Key Failed\r\n");
     }
 
-    err = ockam_vault_key_get_pub(OCKAM_VAULT_KEY_EPHEMERAL,    /* Get the ephemrmal public key                         */
+    err = ockam_vault_key_get_pub(OCKAM_VAULT_KEY_EPHEMERAL,    /* Get the ephemrmal public key                       */
                                   &key_ephemeral[0],
                                   TEST_ATECC608A_PUB_KEY_SIZE);
     if(err != OCKAM_ERR_NONE) {
@@ -193,7 +193,7 @@ void main (void)
     /* ECDH Calculations */
     /* ----------------- */
 
-    err = ockam_vault_ecdh(OCKAM_VAULT_KEY_STATIC,              /* Calculate ECDH with static private and ephemeral pub */
+    err = ockam_vault_ecdh(OCKAM_VAULT_KEY_STATIC,              /* Calculate ECDH with static private/ephemeral pub   */
                            &key_ephemeral[0],
                            TEST_ATECC608A_PUB_KEY_SIZE,
                            &pms_static[0],
@@ -202,7 +202,7 @@ void main (void)
         printf("Error: Ockam Vault ECDH Failed\r\n");
     }
 
-    err = ockam_vault_ecdh(OCKAM_VAULT_KEY_EPHEMERAL,          /* Calculate ECDH with static private and ephemeral pub */
+    err = ockam_vault_ecdh(OCKAM_VAULT_KEY_EPHEMERAL,          /* Calculate ECDH with static private/ephemeral pub    */
                            &key_static[0],
                            TEST_ATECC608A_PUB_KEY_SIZE,
                            &pms_ephemeral[0],

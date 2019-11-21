@@ -29,12 +29,12 @@
  ********************************************************************************************************
  */
 
-#define VAULT_ATECC608A_PMS_SIZE                    32u         /* Size of the pre-master secret                        */
-#define VAULT_ATECC608A_RAND_SIZE                   32u         /* Size of the random number generated                  */
-#define VAULT_ATECC608A_PUB_KEY_SIZE                64u         /* Size of public key                                   */
+#define VAULT_ATECC608A_PMS_SIZE                    32u         /* Size of the pre-master secret                      */
+#define VAULT_ATECC608A_RAND_SIZE                   32u         /* Size of the random number generated                */
+#define VAULT_ATECC608A_PUB_KEY_SIZE                64u         /* Size of public key                                 */
 
-#define VAULT_ATECC608A_KEY_SLOT_STATIC              0u         /* Slot with the preloaded private key                  */
-#define VAULT_ATECC608A_KEY_SLOT_EPHEMERAL   ATCA_TEMPKEY_KEYID /* Slot with the generated ephemeral key                */
+#define VAULT_ATECC608A_KEY_SLOT_STATIC              0u         /* Slot with the preloaded private key                */
+#define VAULT_ATECC608A_KEY_SLOT_EPHEMERAL   ATCA_TEMPKEY_KEYID /* Slot with the generated ephemeral key              */
 
 
 /*
@@ -50,8 +50,8 @@
  *******************************************************************************
  */
 typedef enum {
-    VAULT_ATECC608A_STATE_UNINIT                        = 0x01, /*!< Chip is uninitialized  */
-    VAULT_ATECC608A_STATE_IDLE                          = 0x02  /*!< Chip is in idle        */
+    VAULT_ATECC608A_STATE_UNINIT = 0x01,                        /*!< Chip is uninitialized                            */
+    VAULT_ATECC608A_STATE_IDLE   = 0x02                         /*!< Chip is in idle                                  */
 } VAULT_ATECC608A_STATE_e;
 
 
@@ -78,7 +78,7 @@ static OCKAM_VAULT_KAL_MUTEX atecc608a_mutex;
 
 static VAULT_ATECC608A_STATE_e atecc608a_state = VAULT_ATECC608A_STATE_UNINIT;
 
-ATCAIfaceCfg cfg_ateccx08a_i2c_coral = {                        /*!< Configuration for ATECC608A on Coral RPi board         */
+ATCAIfaceCfg cfg_ateccx08a_i2c_coral = {                        /*!< Configuration for ATECC608A on Coral RPi board   */
     .iface_type                 = ATCA_I2C_IFACE,
     .devtype                    = ATECC608A,
     {
@@ -125,12 +125,12 @@ OCKAM_ERR ockam_vault_init(void *p_arg)
 
 
     do {
-        if(atecc608a_state != VAULT_ATECC608A_STATE_UNINIT) {   /* Make sure we're not already initialized              */
+        if(atecc608a_state != VAULT_ATECC608A_STATE_UNINIT) {   /* Make sure we're not already initialized            */
             ret_val = OCKAM_ERR_VAULT_ALREADY_INIT;
             break;
         }
 
-        ret_val = ockam_vault_kal_mutex_init(&atecc608a_mutex); /* Create a mutex for the ATECC608A                     */
+        ret_val = ockam_vault_kal_mutex_init(&atecc608a_mutex); /* Create a mutex for the ATECC608A                   */
         if(ret_val != OCKAM_ERR_NONE) {
             break;
         }
@@ -151,7 +151,7 @@ OCKAM_ERR ockam_vault_init(void *p_arg)
         // IO Protection Key?
         //
 
-        atecc608a_state = VAULT_ATECC608A_STATE_IDLE;           /* Change the state to idle                             */
+        atecc608a_state = VAULT_ATECC608A_STATE_IDLE;           /* Change the state to idle                           */
     } while(0);
 
     return ret_val;
@@ -200,21 +200,21 @@ OCKAM_ERR ockam_vault_random(uint8_t *p_rand_num, uint32_t rand_num_size)
 
 
     do {
-        if(rand_num_size != VAULT_ATECC608A_RAND_SIZE) {        /* Make sure the expected size matches the buffer       */
+        if(rand_num_size != VAULT_ATECC608A_RAND_SIZE) {        /* Make sure the expected size matches the buffer     */
             ret_val = OCKAM_ERR_VAULT_SIZE_MISMATCH;
             break;
         }
 
-        ockam_vault_kal_mutex_lock(&atecc608a_mutex, 0, 0);     /* Lock the mutex before checking the state             */
+        ockam_vault_kal_mutex_lock(&atecc608a_mutex, 0, 0);     /* Lock the mutex before checking the state           */
 
-        if(atecc608a_state != VAULT_ATECC608A_STATE_IDLE) {     /* Make sure we're in idle before executing             */
+        if(atecc608a_state != VAULT_ATECC608A_STATE_IDLE) {     /* Make sure we're in idle before executing           */
             ockam_vault_kal_mutex_unlock(&atecc608a_mutex, 0);
             break;
         }
 
-        atcab_random(p_rand_num);                               /* Get a random number from the ATECC608A               */
+        atcab_random(p_rand_num);                               /* Get a random number from the ATECC608A             */
 
-        ockam_vault_kal_mutex_unlock(&atecc608a_mutex, 0);      /* Release the mutex                                    */
+        ockam_vault_kal_mutex_unlock(&atecc608a_mutex, 0);      /* Release the mutex                                  */
     } while (0);
 
     return ret_val;
@@ -242,15 +242,15 @@ OCKAM_ERR ockam_vault_key_gen(OCKAM_VAULT_KEY_e key_type)
 
     do
     {
-        if(key_type == OCKAM_VAULT_KEY_STATIC) {                /* Static private key preloaded on ATECC608A            */
+        if(key_type == OCKAM_VAULT_KEY_STATIC) {                /* Static private key preloaded on ATECC608A          */
             break;
         }
 
-        else if(key_type == OCKAM_VAULT_KEY_EPHEMERAL) {        /* Generate a temp key                                  */
+        else if(key_type == OCKAM_VAULT_KEY_EPHEMERAL) {        /* Generate a temp key                                */
             atcab_genkey(ATCA_TEMPKEY_KEYID, 0);
         }
 
-        else {                                                  /* Invalid parameter, return an error                   */
+        else {                                                  /* Invalid parameter, return an error                 */
             ret_val = OCKAM_ERR_INVALID_PARAM;
         }
 
@@ -300,10 +300,10 @@ OCKAM_ERR ockam_vault_key_get_pub(OCKAM_VAULT_KEY_e key_type,
             break;
         }
 
-        ockam_vault_kal_mutex_lock(&atecc608a_mutex, 0, 0);     /* Lock the mutex before getting the public key         */
+        ockam_vault_kal_mutex_lock(&atecc608a_mutex, 0, 0);     /* Lock the mutex before getting the public key       */
 
         switch(key_type) {
-            case OCKAM_VAULT_KEY_STATIC:                        /* Get the static public key                            */
+            case OCKAM_VAULT_KEY_STATIC:                        /* Get the static public key                          */
                 status = atcab_genkey(VAULT_ATECC608A_KEY_SLOT_STATIC,
                                       p_pub_key);
 
@@ -312,7 +312,7 @@ OCKAM_ERR ockam_vault_key_get_pub(OCKAM_VAULT_KEY_e key_type,
                 }
                 break;
 
-            case OCKAM_VAULT_KEY_EPHEMERAL:                     /* Get the generated ephemeral public key               */
+            case OCKAM_VAULT_KEY_EPHEMERAL:                     /* Get the generated ephemeral public key             */
                 status = atcab_genkey(VAULT_ATECC608A_KEY_SLOT_EPHEMERAL,
                                        p_pub_key);
 
@@ -326,7 +326,7 @@ OCKAM_ERR ockam_vault_key_get_pub(OCKAM_VAULT_KEY_e key_type,
                 break;
         }
 
-        ockam_vault_kal_mutex_unlock(&atecc608a_mutex, 0);      /* Release the mutex                                    */
+        ockam_vault_kal_mutex_unlock(&atecc608a_mutex, 0);      /* Release the mutex                                  */
 
     } while (0);
 
@@ -369,25 +369,25 @@ OCKAM_ERR ockam_vault_ecdh(OCKAM_VAULT_KEY_e key_type,
 
 
     do {
-        if((p_pub_key == 0) ||                                  /* Ensure the buffers are not null                          */
+        if((p_pub_key == 0) ||                                  /* Ensure the buffers are not null                    */
            (p_pms == 0))
         {
             ret_val = OCAM_ERR_INVALID_PARAM;
             break;
         }
 
-        if((pub_key_size != VAULT_ATECC608A_PUB_KEY_SIZE) ||    /* Validate the size of the buffers passed in               */
+        if((pub_key_size != VAULT_ATECC608A_PUB_KEY_SIZE) ||    /* Validate the size of the buffers passed in         */
            (pms_size != VAULT_ATECC608A_PMS_SIZE))
         {
             ret_val = OCKAM_ERR_VAULT_SIZE_MISMATCH;
             break;
         }
 
-        ockam_vault_kal_mutex_lock(&atecc608a_mutex, 0, 0);     /* Lock the mutex before checking the state                 */
+        ockam_vault_kal_mutex_lock(&atecc608a_mutex, 0, 0);     /* Lock the mutex before checking the state           */
 
         switch(key_type) {
 
-            case OCKAM_VAULT_KEY_STATIC:                        /* If using the static key, specify which slot              */
+            case OCKAM_VAULT_KEY_STATIC:                        /* If using the static key, specify which slot        */
 
                 status = atcab_ecdh(VAULT_ATECC608A_KEY_SLOT_STATIC,
                                     p_pub_key,
@@ -397,7 +397,7 @@ OCKAM_ERR ockam_vault_ecdh(OCKAM_VAULT_KEY_e key_type,
                 }
                 break;
 
-            case OCKAM_VAULT_KEY_EPHEMERAL:                     /* Ephemeral key uses the temp key slot on the ATECC608A    */
+            case OCKAM_VAULT_KEY_EPHEMERAL:                     /* Ephemeral key uses temp key slot on the ATECC608A  */
 
                 status = atcab_ecdh_tempkey(p_pub_key,
                                             p_pms);
@@ -411,7 +411,7 @@ OCKAM_ERR ockam_vault_ecdh(OCKAM_VAULT_KEY_e key_type,
                 break;
         }
 
-        ockam_vault_kal_mutex_unlock(&atecc608a_mutex, 0);      /* Release the mutex                                        */
+        ockam_vault_kal_mutex_unlock(&atecc608a_mutex, 0);      /* Release the mutex                                  */
 
     } while (0);
 

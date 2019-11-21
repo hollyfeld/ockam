@@ -48,9 +48,9 @@
  *******************************************************************************
  */
 typedef enum {
-    VAULT_SW_MBEDTLS_KEY_PUB = 0,                               /*!< Public key identifier                              */
-    VAULT_SW_MBEDTLS_KEY_PRIV,                                  /*!< Private key identifier                             */
-    MAX_VAULT_SW_MBEDTLS_KEY                                    /*!< Total number of key identifiers                    */
+    VAULT_SW_MBEDTLS_KEY_PUB = 0,                               /*!< Public key identifier                            */
+    VAULT_SW_MBEDTLS_KEY_PRIV,                                  /*!< Private key identifier                           */
+    MAX_VAULT_SW_MBEDTLS_KEY                                    /*!< Total number of key identifiers                  */
 } VAULT_SW_MBEDTLS_KEY_e;
 
 
@@ -68,9 +68,9 @@ typedef enum {
  *******************************************************************************
  */
 typedef struct {
-    uint8_t pub_data[VAULT_SW_MBEDTLS_PUB_KEY_SIZE];            /*!< Public key data                                    */
-    uint8_t priv_data[VAULT_SW_MBEDTLS_PRIV_KEY_SIZE];          /*!< Private key data                                   */
-    uint8_t valid;                                              /*!< OCKAM_FALSE if invalid, OCKAM_TRUE if valid        */
+    uint8_t pub_data[VAULT_SW_MBEDTLS_PUB_KEY_SIZE];            /*!< Public key data                                  */
+    uint8_t priv_data[VAULT_SW_MBEDTLS_PRIV_KEY_SIZE];          /*!< Private key data                                 */
+    uint8_t valid;                                              /*!< OCKAM_FALSE if invalid, OCKAM_TRUE if valid      */
 } VAULT_SW_MBEDTLS_KEY_s;
 
 
@@ -92,7 +92,7 @@ OCKAM_ERR vault_sw_mbedtls_get_key(OCKAM_VAULT_KEY_e key,
  */
 
 #if(OCKAM_VAULT_CFG_KEY_ECDH  == OCKAM_VAULT_SW_MBEDTLS)
-VAULT_SW_MBEDTLS_KEY_s* g_key[MAX_OCKAM_VAULT_KEY];              /* Array of buffers for key storage                    */
+VAULT_SW_MBEDTLS_KEY_s* g_key[MAX_OCKAM_VAULT_KEY];              /* Array of buffers for key storage                  */
 #endif
 
 #if(OCKAM_VAULT_CFG_RAND == OCKAM_VAULT_SW_MBEDTLS)
@@ -142,8 +142,8 @@ OCKAM_ERR ockam_vault_sw_init(void *p_arg)
 
 #if(OCKAM_VAULT_CFG_RAND  == OCKAM_VAULT_SW_MBEDTLS)
 
-        mbedtls_entropy_init(&g_entropy_ctx);                   /* Initialize entropy context before adding a source    */
-        mbedtls_ctr_drbg_init(&g_ctr_drbg);                     /* Initialize entropy context before adding a source    */
+        mbedtls_entropy_init(&g_entropy_ctx);                   /* Initialize entropy context before adding a source  */
+        mbedtls_ctr_drbg_init(&g_ctr_drbg);                     /* Initialize entropy context before adding a source  */
 
         
         rtn = 
@@ -246,7 +246,7 @@ OCKAM_ERR ockam_vault_sw_key_get_pub(OCKAM_VAULT_KEY_e vault_key,
 
     do
     {
-        if((p_pub_key == OCKAM_NULL) ||                         /* Ensure the buffer isn't null and the size is correct */
+        if((p_pub_key == OCKAM_NULL) ||                         /* Ensure the buffer isn't null and size is correct   */
             ret_val = OCAM_ERR_INVALID_PARAM;
             break;
         }
@@ -256,32 +256,32 @@ OCKAM_ERR ockam_vault_sw_key_get_pub(OCKAM_VAULT_KEY_e vault_key,
             break;
         }
 
-        ret_val = vault_sw_mbedtls_get_key(vault_key,           /* Get the desired public key                           */
+        ret_val = vault_sw_mbedtls_get_key(vault_key,           /* Get the desired public key                         */
                                            VAULT_SW_MBEDTLS_KEY_PUB,
                                            p_key);
         if(ret_val != OCKAM_ERR_NONE) {
             break;
         }
 
-        for(i = 0; i < MAX_OCKAM_VAULT_KEY; i++) {              /* Loop through the vault keys to get the right key     */
+        for(i = 0; i < MAX_OCKAM_VAULT_KEY; i++) {              /* Loop through the vault keys to get the right key   */
             if(vault_key == i) {
                 p_key = g_key[i];
                 valid_key = OCKAM_TRUE;
-                break;                                          /* Break out of for loop when key is found              */
+                break;                                          /* Break out of for loop when key is found            */
             }
         }
 
-        if(valid_key == OCKAM_FALSE) {                          /* Make sure we found a valid vault key, otherwise      */
-            ret_val = OCKAM_ERR_INVALID_PARAM;                  /* an error                                             */
+        if(valid_key == OCKAM_FALSE) {                          /* Make sure we found a valid vault key, otherwise    */
+            ret_val = OCKAM_ERR_INVALID_PARAM;                  /* an error                                           */
             break;
         }
 
-        if(p_key->valid == OCKAM_FALSE) {                       /* Ensure the data in the key is valid data             */
+        if(p_key->valid == OCKAM_FALSE) {                       /* Ensure the data in the key is valid data           */
             ret_val = OCKAM_ERR_SW_KEY_FAIL;
             break;
         }
 
-        ret_val = ockam_mem_copy(p_pub_key,                     /* Copy the public key to the buffer                    */
+        ret_val = ockam_mem_copy(p_pub_key,                     /* Copy the public key to the buffer                  */
                                  p_key->data,
                                  pub_key_size);
     } while (0);
@@ -324,13 +324,13 @@ OCKAM_ERR ockam_vault_sw_ecdh(OCKAM_VAULT_KEY_e vault_key,
 
 
     do {
-        if((p_pub_key == OCKAM_NULL) || (p_pms == OCKAM_NULL))  /* Ensure the buffers are not null                      */
+        if((p_pub_key == OCKAM_NULL) || (p_pms == OCKAM_NULL))  /* Ensure the buffers are not null                    */
         {
             ret_val = OCAM_ERR_INVALID_PARAM;
             break;
         }
 
-        if(valid_key == OCKAM_FALSE) {                          /* Ensure the vault key is valid                         */
+        if(valid_key == OCKAM_FALSE) {                          /* Ensure the vault key is valid                      */
             ret_val = OCKAM_ERR_INVALID_PARAM;
             break;
         }
@@ -384,19 +384,19 @@ OCKAM_ERR ockam_vault_sw_hkdf(uint8_t *p_salt,
 
 
     do {
-        if((p_ikm == OCKAM_NULL) || (ikm_size == 0) ||          /* Ensure the input key and output buffers are not null */
-            p_out == OCKAM_NULL || out_size  == 0) {            /* and the size values are greater than zero            */
+        if((p_ikm == OCKAM_NULL) || (ikm_size == 0) ||          /* Ensure the input key and output buffers are not    */
+            p_out == OCKAM_NULL || out_size  == 0) {            /* null and the size values are greater than zero     */
             ret_val = OCKAM_ERR_INVALID_PARAM;
         }
 
-        p_md = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);    /* Get the SHA-256 MD context for HKDF                  */
+        p_md = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);    /* Get the SHA-256 MD context for HKDF                */
 
-        ret = mbedtls_hkdf(p_md,                                /* Perform the HKDF calculation                         */
+        ret = mbedtls_hkdf(p_md,                                /* Perform the HKDF calculation                       */
                            p_salt, salt_size,
                            p_ikm, ikm_size,
                            p_info, info_size,
                            p_out, out_size);
-        if(ret != 0) {                                          /* Check for an mbed TLS error                          */
+        if(ret != 0) {                                          /* Check for an mbed TLS error                        */
             OCKAM_ERR_VAULT_SW_HKDF_FAIL;
         }
 
@@ -442,13 +442,13 @@ OCKAM_ERR vault_sw_mbedtls_get_key(OCKAM_VAULT_KEY_e vault_key,
     OCKAM_ERR ret_val = OCKAM_ERR_VAULT_SW_KEY_FAIL;
 
 
-    for(i = 0; i < MAX_OCKAM_VAULT_KEY; i++) {              /* Loop through the key types to get the right key      */
+    for(i = 0; i < MAX_OCKAM_VAULT_KEY; i++) {                  /* Loop through the key types to get the right key    */
         if(vault_key == i) {
-            if((g_key[i]->valid) == OCKAM_FALSE) {          /* Check to see if the keypair is valid                 */
+            if((g_key[i]->valid) == OCKAM_FALSE) {              /* Check to see if the keypair is valid               */
                 break;
             }
 
-            switch(key_type) {                              /* Grab the public or private data pointer              */
+            switch(key_type) {                                  /* Grab the public or private data pointer            */
                 case VAULT_SW_MBEDTLS_KEY_PUB:
                     p_key = g_key[i]->pub_data;
                     ret_val = OCKAM_ERR_NONE;
@@ -463,7 +463,7 @@ OCKAM_ERR vault_sw_mbedtls_get_key(OCKAM_VAULT_KEY_e vault_key,
                     break;
             }
 
-            break;                                          /* Break out of the for loop and return                 */
+            break;                                              /* Break out of the for loop and return               */
         }
     }
 

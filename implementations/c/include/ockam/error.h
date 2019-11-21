@@ -28,7 +28,6 @@
  */
 
 typedef enum {
-<<<<<<< HEAD
     OCKAM_ERR_NONE                                    = 0x0000, /*!< No error                                         */
 
     OCKAM_ERR_INVALID_PARAM                           = 0x0010, /*!< Invalid parameter specified                      */

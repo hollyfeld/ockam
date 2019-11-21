@@ -53,10 +53,10 @@
  */
 
 typedef enum {
-    OCKAM_KAL_OPT_NONE         = 0x00,                          /*!< No option specified                                */
-    OCKAM_KAL_OPT_BLOCKING     = 0x00,                          /*!< Make a blocking call (default)                     */
-    OCKAM_KAL_OPT_NON_BLOCKING = 0x01,                          /*!< Make a non-blocking call, if applicable            */
-    OCKAM_KAL_OPT_NO_SCHED     = 0x02,                          /*!< Don't run the scheduler, if applicable             */
+    OCKAM_KAL_OPT_NONE         = 0x00,                          /*!< No option specified                              */
+    OCKAM_KAL_OPT_BLOCKING     = 0x00,                          /*!< Make a blocking call (default)                   */
+    OCKAM_KAL_OPT_NON_BLOCKING = 0x01,                          /*!< Make a non-blocking call, if applicable          */
+    OCKAM_KAL_OPT_NO_SCHED     = 0x02,                          /*!< Don't run the scheduler, if applicable           */
 } OCKAM_KAL_OPT;
 
 
@@ -75,7 +75,7 @@ typedef enum {
  */
 
 typedef struct {
-    void *mutex_ptr;                                            /*!< Void* for the mutex                                */
+    void *mutex_ptr;                                            /*!< Void* for the mutex                              */
 } OCKAM_KAL_MUTEX;
 
 
@@ -87,7 +87,7 @@ typedef struct {
  */
 
 typedef struct {
-    void *queue_ptr;                                            /*!< Void* for the queue                                */
+    void *queue_ptr;                                            /*!< Void* for the queue                              */
 } OCKAM_KAL_QUEUE;
 
 

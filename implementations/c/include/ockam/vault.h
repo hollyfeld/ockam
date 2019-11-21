@@ -37,9 +37,9 @@
  *******************************************************************************
  */
 typedef enum {
-    OCKAM_VAULT_KEY_STATIC  = 0,                                /*!< Static key                                         */
-    OCKAM_VAULT_KEY_EPHEMERAL,                                  /*!< Ephemeral key                                      */
-    MAX_OCKAM_VAULT_KEY                                         /*!< Total number of key types supported                */
+    OCKAM_VAULT_KEY_STATIC  = 0,                                /*!< Static key                                       */
+    OCKAM_VAULT_KEY_EPHEMERAL,                                  /*!< Ephemeral key                                    */
+    MAX_OCKAM_VAULT_KEY                                         /*!< Total number of key types supported              */
 } OCKAM_VAULT_KEY_e;
 
 
@@ -50,9 +50,9 @@ typedef enum {
  *******************************************************************************
  */
 typedef enum {
-    OCKAM_VAULT_CFG_FN_HW,                                      /*!<  Vault operation is performed on the hardware port */
-    OCKAM_VAULT_CFG_FN_CRYPTO,                                  /*!<  Vault operation is performed in the crypto lib    */
-    OCKAM_VAULT_CFG_FN_BOTH                                     /*!<  Vault operation is performed on port and crypto   */
+    OCKAM_VAULT_CFG_FN_HW,                                      /*!<  Vault operation performed on the hardware port  */
+    OCKAM_VAULT_CFG_FN_CRYPTO,                                  /*!<  Vault operation performed in the crypto lib     */
+    OCKAM_VAULT_CFG_FN_BOTH                                     /*!<  Vault operation performed on port and crypto    */
 } OCKAM_VAULT_CFG_FN_e;
 
 
@@ -71,12 +71,12 @@ typedef enum {
  */
 
 typedef struct {
-    OCKAM_VAULT_CFG_FN_e init;                                  /*!<  Vault Init Functions Config                       */
-    OCKAM_VAULT_CFG_FN_e random;                                /*!<  Vault Random Function Config                      */
-    OCKAM_VAULT_CFG_FN_e key;                                   /*!<  Vault Key Functions Config                        */
-    OCKAM_VAULT_CFG_FN_e ecdh;                                  /*!<  Vault ECDH Functions Config                       */
-    OCKAM_VAULT_CFG_FN_e hkdf;                                  /*!<  Vault HDKF Functions Config                       */
-    OCKAM_VAULT_CFG_FN_e aes_gcm;                               /*!<  Vault AES GMC Functions Config                    */
+    OCKAM_VAULT_CFG_FN_e init;                                  /*!<  Vault Init Functions Config                     */
+    OCKAM_VAULT_CFG_FN_e random;                                /*!<  Vault Random Function Config                    */
+    OCKAM_VAULT_CFG_FN_e key;                                   /*!<  Vault Key Functions Config                      */
+    OCKAM_VAULT_CFG_FN_e ecdh;                                  /*!<  Vault ECDH Functions Config                     */
+    OCKAM_VAULT_CFG_FN_e hkdf;                                  /*!<  Vault HDKF Functions Config                     */
+    OCKAM_VAULT_CFG_FN_e aes_gcm;                               /*!<  Vault AES GMC Functions Config                  */
 } OCKAM_VAULT_CFG_FN_s;
 
 
@@ -88,8 +88,8 @@ typedef struct {
  *******************************************************************************
  */
 typedef struct {
-    void* p_hw;                                                 /*!<  Hardware specific configuration                   */
-    void* p_sw;                                                 /*!<  Software library specific configuration           */
+    void* p_hw;                                                 /*!<  Hardware specific configuration                 */
+    void* p_sw;                                                 /*!<  Software library specific configuration         */
 } OCKAM_VAULT_CFG_s;
 
 

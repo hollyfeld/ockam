@@ -136,13 +136,13 @@ OCKAM_ERR ockam_vault_sw_key_gen(OCKAM_VAULT_KEY_e key_type)
 
     do
     {
-        if(key_type == OCKAM_VAULT_KEY_STATIC) {                /* Static private key                                   */
+        if(key_type == OCKAM_VAULT_KEY_STATIC) {                /* Static private key                                 */
         }
 
-        else if(key_type == OCKAM_VAULT_KEY_EPHEMERAL) {        /* Generate a temp key                                  */
+        else if(key_type == OCKAM_VAULT_KEY_EPHEMERAL) {        /* Generate a temp key                                */
         }
 
-        else {                                                  /* Invalid parameter, return an error                   */
+        else {                                                  /* Invalid parameter, return an error                 */
             ret_val = OCKAM_ERR_INVALID_PARAM;
         }
     } while(0);
@@ -178,7 +178,7 @@ OCKAM_ERR ockam_vault_sw_key_get_pub(OCKAM_VAULT_KEY_e key_type,
 
     do
     {
-        if(p_pub_key == OCKAM_NULL) {                           /* Ensure the buffer isn't null */
+        if(p_pub_key == OCKAM_NULL) {                           /* Ensure the buffer isn't null                       */
             ret_val = OCAM_ERR_INVALID_PARAM;
             break;
         }
@@ -186,10 +186,10 @@ OCKAM_ERR ockam_vault_sw_key_get_pub(OCKAM_VAULT_KEY_e key_type,
         // TODO check keysize?
 
         switch(key_type) {
-            case OCKAM_VAULT_KEY_STATIC:                        /* Get the static public key                            */
+            case OCKAM_VAULT_KEY_STATIC:                        /* Get the static public key                          */
                 break;
 
-            case OCKAM_VAULT_KEY_EPHEMERAL:                     /* Get the generated ephemeral public key               */
+            case OCKAM_VAULT_KEY_EPHEMERAL:                     /* Get the generated ephemeral public key             */
                 break;
 
             default:
@@ -235,7 +235,7 @@ OCKAM_ERR ockam_vault_sw_ecdh(OCKAM_VAULT_KEY_e key_type,
 
 
     do {
-        if((p_pub_key == OCKAM_NULL) ||                         /* Ensure the buffers are not null                      */
+        if((p_pub_key == OCKAM_NULL) ||                         /* Ensure the buffers are not null                    */
            (p_pms == OCKAM_NULL))
         {
             ret_val = OCAM_ERR_INVALID_PARAM;
@@ -246,10 +246,10 @@ OCKAM_ERR ockam_vault_sw_ecdh(OCKAM_VAULT_KEY_e key_type,
 
         switch(key_type) {
 
-            case OCKAM_VAULT_KEY_STATIC:                        /* If using the static key, specify which slot          */
+            case OCKAM_VAULT_KEY_STATIC:                        /* If using the static key, specify which slot        */
                 break;
 
-            case OCKAM_VAULT_KEY_EPHEMERAL:                     /* Ephemeral key uses the temp key slot on the ATECC508A*/
+            case OCKAM_VAULT_KEY_EPHEMERAL:                     /* Ephemeral key                                      */
                 break;
 
             default:

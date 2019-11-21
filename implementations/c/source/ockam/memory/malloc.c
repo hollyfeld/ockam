@@ -85,7 +85,7 @@ OCKAM_ERR ockam_mem_init(void* p_buf)
 
 
     do {
-        if(p_buf == OCKAM_NULL) {                               /* Ensure the buffer pointer is not null                */
+        if(p_buf == OCKAM_NULL) {                               /* Ensure the buffer pointer is not null              */
             ret_val = OCKAM_ERR_INVALID_PARAM;
             break;
         }
@@ -123,14 +123,14 @@ OCKAM_ERR ockam_mem_alloc(void* p_buf, uint32_t size)
 
 
     do {
-        if(size == 0) {                                         /* Ensure the requested size is >0                      */
+        if(size == 0) {                                         /* Ensure the requested size is >0                    */
             ret_val = OCKAM_ERR_INVALID_SIZE;
             break;
         }
 
-        p_buf = malloc(size);                                   /* Attempt to malloc                                    */
+        p_buf = malloc(size);                                   /* Attempt to malloc                                  */
 
-        if(p_buf == OCKAM_NULL) {                               /* Check if we got a buffer                             */
+        if(p_buf == OCKAM_NULL) {                               /* Check if we got a buffer                           */
             ret_val = OCKAM_ERR_MEM_UNAVAIL;
             break;
         }
@@ -159,12 +159,12 @@ OCKAM_ERR ockam_mem_free(void* p_buf)
 
 
     do {
-        if(p_buf == OCKAM_NULL) {                               /* Ensure the buffer point is not null                  */
+        if(p_buf == OCKAM_NULL) {                               /* Ensure the buffer point is not null                */
             ret_val = OCKAM_ERR_INVALID_PARAM;
             break;
         }
 
-        free(p_buf);                                            /* Free the buffer                                      */
+        free(p_buf);                                            /* Free the buffer                                    */
 
     } while(0);
 
