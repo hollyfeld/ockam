@@ -1,11 +1,11 @@
 /**
  ********************************************************************************************************
- * @file        software.h
- * @brief   
+ * @file    software.h
+ * @brief   Ockam Vault Software Interface
  ********************************************************************************************************
  */
 
-#ifndef OCKAM_VAULT_SOFTWARE_H_ 
+#ifndef OCKAM_VAULT_SOFTWARE_H_
 #define OCKAM_VAULT_SOFTWARE_H_
 
 

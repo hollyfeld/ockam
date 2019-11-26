@@ -1,7 +1,7 @@
 /**
  ********************************************************************************************************
  * @file        atecc508a.c
- * @brief   
+ * @brief
  ********************************************************************************************************
  */
 
@@ -92,7 +92,7 @@
 /**
  *******************************************************************************
  * @struct  VAULT_ATECC508A_CFG_DATA_s
- * @brief   
+ * @brief
  *******************************************************************************
  */
 typedef struct {                                                /*!< Byte(s): Description                             */
@@ -156,7 +156,7 @@ static VAULT_ATECC508A_CFG_DATA_s *g_atecc508a_cfg_data;
  * @brief   Initialize the ATECC508A for Ockam Vault
  *
  * @param   p_arg   Optional void* argument
- * 
+ *
  * @return  OCKAM_ERR_NONE if initialized successfully. OCKAM_ERR_VAULT_ALREADY_INIT if already
  *          initialized. Other errors if specific chip fails init.
  *
@@ -224,14 +224,14 @@ OCKAM_ERR ockam_vault_hw_init(void *p_arg)
  * @brief   Free the hardware and all associated data structures
  *
  * @return  OCKAM_ERR_NONE on success.
- * 
+ *
  ********************************************************************************************************
  */
 
 #if(OCKAM_VAULT_CFG_INIT & OCKAM_VAULT_HW_MICROCHIP_ATECC508A)
 OCKAM_ERR ockam_vault_hw_free (void)
 {
-   return OCKAM_ERR_NONE; 
+   return OCKAM_ERR_NONE;
 }
 #endif
 
@@ -246,8 +246,8 @@ OCKAM_ERR ockam_vault_hw_free (void)
  *
  * @param   rand_num_size[in]   The size of the desired random number & buffer passed in. Used to verify
  *                              correct size.
- * 
- * @return  OCKAM_ERR_NONE if successful. OCKAM_ERR_VAULT_INVALID_SIZE if size 
+ *
+ * @return  OCKAM_ERR_NONE if successful. OCKAM_ERR_VAULT_INVALID_SIZE if size
  *
  ********************************************************************************************************
  */

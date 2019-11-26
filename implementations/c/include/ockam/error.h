@@ -1,7 +1,9 @@
 /**
  ********************************************************************************************************
- * @file        error.h
- * @brief   
+ * @file    error.h
+ * @brief   Ockam Error Codes
+ *
+ * This file contains all error codes used across all modules in the Ockam library
  ********************************************************************************************************
  */
 

@@ -1,12 +1,13 @@
 /**
  ********************************************************************************************************
- * @file        vault.h
- * @brief   
+ * @file    vault.h
+ * @brief   Vault interface for the Ockam Library
  ********************************************************************************************************
  */
 
 #ifndef OCKAM_VAULT_H_
 #define OCKAM_VAULT_H_
+
 
 /*
  ********************************************************************************************************
@@ -43,48 +44,16 @@ typedef enum {
 } OCKAM_VAULT_KEY_e;
 
 
-/**
- *******************************************************************************
- * @enum    OCKAM_VAULT_CFG_FN_e
- * @brief   
- *******************************************************************************
- */
-typedef enum {
-    OCKAM_VAULT_CFG_FN_HW,                                      /*!<  Vault operation performed on the hardware port  */
-    OCKAM_VAULT_CFG_FN_CRYPTO,                                  /*!<  Vault operation performed in the crypto lib     */
-    OCKAM_VAULT_CFG_FN_BOTH                                     /*!<  Vault operation performed on port and crypto    */
-} OCKAM_VAULT_CFG_FN_e;
-
-
 /*
  ********************************************************************************************************
  *                                               DATA TYPES                                             *
  ********************************************************************************************************
  */
 
-
 /**
  *******************************************************************************
  * @struct  OCKAM_VAULT_CFG_s
- * @brief   
- *******************************************************************************
- */
-
-typedef struct {
-    OCKAM_VAULT_CFG_FN_e init;                                  /*!<  Vault Init Functions Config                     */
-    OCKAM_VAULT_CFG_FN_e random;                                /*!<  Vault Random Function Config                    */
-    OCKAM_VAULT_CFG_FN_e key;                                   /*!<  Vault Key Functions Config                      */
-    OCKAM_VAULT_CFG_FN_e ecdh;                                  /*!<  Vault ECDH Functions Config                     */
-    OCKAM_VAULT_CFG_FN_e hkdf;                                  /*!<  Vault HDKF Functions Config                     */
-    OCKAM_VAULT_CFG_FN_e aes_gcm;                               /*!<  Vault AES GMC Functions Config                  */
-} OCKAM_VAULT_CFG_FN_s;
-
-
-
-/**
- *******************************************************************************
- * @struct  OCKAM_VAULT_CFG_s
- * @brief   
+ * @brief
  *******************************************************************************
  */
 typedef struct {
@@ -104,9 +73,6 @@ typedef struct {
  *                                            GLOBAL VARIABLES                                          *
  ********************************************************************************************************
  */
-
-extern const OCKAM_VAULT_CFG_FN_s ockam_vault_cfg_fn;
-
 
 /*
  ********************************************************************************************************

@@ -75,7 +75,7 @@
  * @brief   Initialize libsodium for crypto operations
  *
  * @param   p_arg   Optional void* argument
- * 
+ *
  * @return  OCKAM_ERR_NONE if initialized successfully. OCKAM_ERR_VAULT_ALREADY_INIT if already
  *          initialized. Other errors if library fails.
  *

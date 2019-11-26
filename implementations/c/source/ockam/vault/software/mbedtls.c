@@ -118,8 +118,8 @@ mbedtls_entropy_context g_entropy_ctx;
  * @brief   Initialize mbedtls for crypto operations
  *
  * @param   p_arg   Optional void* argument
- * 
- * @return  OCKAM_ERR_NONE if initialized successfully. 
+ *
+ * @return  OCKAM_ERR_NONE if initialized successfully.
  *
  ********************************************************************************************************
  */
@@ -148,11 +148,6 @@ OCKAM_ERR ockam_vault_sw_init(void *p_arg)
 
         mbedtls_entropy_init(&g_entropy_ctx);                   /* Initialize entropy context before adding a source  */
         mbedtls_ctr_drbg_init(&g_ctr_drbg);                     /* Initialize entropy context before adding a source  */
-
-        
-        rtn = 
-
-
 
 #endif
 

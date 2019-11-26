@@ -1,7 +1,7 @@
 /**
  ********************************************************************************************************
  * @file        vault.c
- * @brief   
+ * @brief
  ********************************************************************************************************
  */
 
@@ -87,7 +87,7 @@ static VAULT_STATE_e g_vault_state = VAULT_STATE_UNINIT;
  * @brief   Initialize the Ockam Vault
  *
  * @param   p_cfg   Configuration values for the hardware and/or software library
- * 
+ *
  * @return  OCKAM_ERR_NONE if initialized successfully. OCKAM_ERR_VAULT_ALREADY_INIT if already
  *          initialized. Other errors if specific chip fails init.
  *
@@ -134,7 +134,7 @@ OCKAM_ERR ockam_vault_init(OCKAM_VAULT_CFG_s *p_cfg)
     } while(0);
 
     if(ret_val != OCKAM_ERR_NONE) {                             /* If init fails, release any mutexes acquired        */
-        ockam_kal_mutex_free(&g_vault_mutex);                   /*  No need to check return, free may fail if it was  */ 
+        ockam_kal_mutex_free(&g_vault_mutex);                   /*  No need to check return, free may fail if it was  */
     }                                                           /*  never acquired.                                   */
 
     return ret_val;
@@ -151,8 +151,8 @@ OCKAM_ERR ockam_vault_init(OCKAM_VAULT_CFG_s *p_cfg)
  *
  * @param   rand_num_size[in]   The size of the desired random number & buffer passed in. Used to verify
  *                              correct size.
- * 
- * @return  OCKAM_ERR_NONE if successful. OCKAM_ERR_VAULT_INVALID_SIZE if size 
+ *
+ * @return  OCKAM_ERR_NONE if successful. OCKAM_ERR_VAULT_INVALID_SIZE if size
  *
  ********************************************************************************************************
  */
