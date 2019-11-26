@@ -41,7 +41,7 @@ set(THIRD_PARTY_DIR ${OCKAM_C_BASE}/third-party)
 
 # Vault Hardware Build Options
 set(VAULT_HW_ATECC508A TRUE)
-set(VAULT_SW_MBEDTLS TRUE)
+set(VAULT_SW_MBEDCRYPTO TRUE)
 set(VAULT_IFACE_I2C TRUE)
 
 # KAL Build Option
@@ -99,6 +99,6 @@ target_link_libraries(test_atecc508a ockam_kal)
 target_link_libraries(test_atecc508a ockam_log)
 target_link_libraries(test_atecc508a ockam_mem)
 target_link_libraries(test_atecc508a cryptoauth)
-target_link_libraries(test_atecc508a mbedtls)
+target_link_libraries(test_atecc508a mbedcrypto)
 
 install(TARGETS test_atecc508a DESTINATION bin)
