@@ -37,8 +37,8 @@
  ********************************************************************************************************
  */
 
-#define ATECC508A_DEVREV_MIN                  0x00005000        /* Minimum device rev from info                       */
-#define ATECC508A_DEVREV_MAX                  0x000050FF        /* Maximum device rev from info                       */
+#define ATECC508A_DEVREV_MIN                  0x00500000        /* Minimum device rev from info                       */
+#define ATECC508A_DEVREV_MAX                  0x005000FF        /* Maximum device rev from info                       */
 
 #define ATECC508A_PMS_SIZE                    32u               /* Size of the pre-master secret                      */
 #define ATECC508A_RAND_SIZE                   32u               /* Size of the random number generated                */
@@ -95,6 +95,8 @@
  * @brief
  *******************************************************************************
  */
+
+#pragma pack(1)
 typedef struct {                                                /*!< Byte(s): Description                             */
     uint8_t serial_num_0[4];                                    /*!< 0-3    : SN<0:3>                                 */
     uint32_t revision;                                          /*!< 4-7    : Revision Number                         */
@@ -119,6 +121,7 @@ typedef struct {                                                /*!< Byte(s): De
     uint32_t x509_format;                                       /*!< 92-95  : Template length & public position config*/
     uint16_t key_config[16];                                    /*!< 96-127 : 16 key configurations                   */
 } ATECC508A_CFG_DATA_s;
+#pragma pack()
 
 
 /*
@@ -190,8 +193,8 @@ OCKAM_ERR ockam_vault_tpm_init(void *p_arg)
             ret_val = OCKAM_ERR_VAULT_TPM_UNSUPPORTED_IFACE;
             break;
         }
-
-        ret_val = ockam_mem_alloc((void*) g_atecc508a_cfg_data, /* Allocate memory for the configuration structure    */
+                                                                /* Allocate memory for the configuration structure    */
+        ret_val = ockam_mem_alloc((void**) &g_atecc508a_cfg_data,
                                   sizeof(ATECC508A_CFG_DATA_s));
                                                                 /* Read the configuration of the ATECC508A            */
         status = atcab_read_config_zone((uint8_t*) g_atecc508a_cfg_data);

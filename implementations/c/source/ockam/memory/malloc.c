@@ -117,7 +117,7 @@ OCKAM_ERR ockam_mem_init(void* p_buf)
  ********************************************************************************************************
  */
 
-OCKAM_ERR ockam_mem_alloc(void* p_buf, uint32_t size)
+OCKAM_ERR ockam_mem_alloc(void** p_buf, uint32_t size)
 {
     OCKAM_ERR ret_val = OCKAM_ERR_NONE;
 
@@ -128,9 +128,9 @@ OCKAM_ERR ockam_mem_alloc(void* p_buf, uint32_t size)
             break;
         }
 
-        p_buf = malloc(size);                                   /* Attempt to malloc                                  */
+        *p_buf = malloc(size);                                  /* Attempt to malloc                                  */
 
-        if(p_buf == OCKAM_NULL) {                               /* Check if we got a buffer                           */
+        if(*p_buf == OCKAM_NULL) {                              /* Check if we got a buffer                           */
             ret_val = OCKAM_ERR_MEM_UNAVAIL;
             break;
         }
