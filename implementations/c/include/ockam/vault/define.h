@@ -15,8 +15,8 @@
  ********************************************************************************************************
  */
 
-#define OCKAM_VAULT_CFG_HW                      0x0001000
-#define OCKAM_VAULT_CFG_SW                      0x0002000
+#define OCKAM_VAULT_CFG_TPM                     0x0001000
+#define OCKAM_VAULT_CFG_HOST                    0x0002000
 
 
 /*
@@ -25,7 +25,7 @@
  ********************************************************************************************************
  */
 
-#define OCKAM_VAULT_CFG_HW_MICROCHIP            0x00000100
+#define OCKAM_VAULT_CFG_TPM_MICROCHIP           0x00000100
 
 
 /*
@@ -34,8 +34,8 @@
  ********************************************************************************************************
  */
 
-#define OCKAM_VAULT_HW_MICROCHIP_ATECC508A      (OCKAM_VAULT_CFG_HW | OCKAM_VAULT_CFG_HW_MICROCHIP | 0x00000001)
-#define OCKAM_VAULT_HW_MICROCHIP_ATECC608A      (OCKAM_VAULT_CFG_HW | OCKAM_VAULT_CFG_HW_MICROCHIP | 0x00000002)
+#define OCKAM_VAULT_TPM_MICROCHIP_ATECC508A      (OCKAM_VAULT_CFG_TPM | OCKAM_VAULT_CFG_TPM_MICROCHIP | 0x00000001)
+#define OCKAM_VAULT_TPM_MICROCHIP_ATECC608A      (OCKAM_VAULT_CFG_TPM | OCKAM_VAULT_CFG_TPM_MICROCHIP | 0x00000002)
 
 
 /*
@@ -44,7 +44,7 @@
  ********************************************************************************************************
  */
 
-#define OCKAM_VAULT_SW_MBEDTLS                  (OCKAM_VAULT_CFG_SW | 0x00000001)
+#define OCKAM_VAULT_HOST_MBEDCRYPTO               (OCKAM_VAULT_CFG_HOST | 0x00000001)
 
 
 #endif

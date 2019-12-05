@@ -12,8 +12,8 @@ set(CMAKE_VERBOSE_MAKEFILE TRUE)
 #######################
 
 set(VAULT_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(VAULT_HW_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/hardware)
-set(VAULT_SW_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/software)
+set(VAULT_TPM_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tpm)
+set(VAULT_HOST_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/host)
 
 set(OCKAM_INC_DIR ${OCKAM_C_BASE}/include)
 set(THIRD_PARTY_DIR ${OCKAM_C_BASE}/third-party/)
@@ -23,19 +23,20 @@ set(THIRD_PARTY_DIR ${OCKAM_C_BASE}/third-party/)
 # Build Options #
 #################
 
-# Vault Hardware Build Options
-option(VAULT_HW_ATECC508A "Vault Hardware: Microchip ATECC508A")
-option(VAULT_HW_ATECC608A "Vault Hardware: Microchip ATECC608A")
+# Vault External Build Options
+option(VAULT_TPM_ATECC508A "Vault TPM: Microchip ATECC508A")
+option(VAULT_TPM_ATECC608A "Vault TPM: Microchip ATECC608A")
+option(VAULT_TPM_SE050 "Vault TPM: NXP SE050")
 
 # Vault Software Build Options
-option(VAULT_SW_MBEDTLS "Vault Software: mbed TLS")
-option(VAULT_SW_MBEDCRYPTO "Vault Software: mbed Crypto")
-option(VAULT_SW_LIBSODIUM "Vault Software: Lib Sodium")
+option(VAULT_HOST_OCKAM "Vault Host: Ockam")
+option(VAULT_HOST_MBEDCRYPTO "Vault Host: mbed Crypto")
+option(VAULT_HOST_OPENSSL "Vault Host: OpenSSL")
 
-# Vault Interface Options
-option(VAULT_IFACE_I2C "Vault IFace: I2C")
-option(VAULT_IFACE_SPI "Vault IFace: SPI")
-option(VAULT_IFACE_UART "Vault IFace: UART")
+# Vault External Interface Options
+option(VAULT_TPM_IFACE_I2C "Vault IFace: I2C")
+option(VAULT_TPM_IFACE_SPI "Vault IFace: SPI")
+option(VAULT_TPM_IFACE_UART "Vault IFace: UART")
 
 
 ###################
@@ -46,93 +47,42 @@ set(VAULT_SRC ${VAULT_SRC_DIR}/vault.c)
 set(VAULT_INC ${OCKAM_INC_DIR})
 
 
-####################
-# HW Specific Code #
-####################
+##########################
+# External Specific Code #
+##########################
 
 # ATECC508A Specific Config 
-if(VAULT_HW_ATECC508A)
-    set(VAULT_SRC ${VAULT_SRC} ${VAULT_HW_SRC_DIR}/microchip/atecc508a.c)
-    set(VAULT_HW_VENDOR_MICROCHIP TRUE)
+if(VAULT_TPM_ATECC508A)
+    set(VAULT_SRC ${VAULT_SRC} ${VAULT_TPM_SRC_DIR}/microchip/atecc508a.c)
+    include(${OCKAM_C_BASE}/tools/cmake/third-party/microchip.cmake)
 endif()
 
 # ATECC608A Specific Config 
-if(VAULT_HW_ATECC608A)
-    set(VAULT_SRC ${VAULT_SRC} ${VAULT_HW_SRC_DIR}/microchip/atecc608a.c)
-    set(VAULT_HW_VENDOR_MICROCHIP TRUE)
+if(VAULT_TPM_ATECC608A)
+    set(VAULT_SRC ${VAULT_SRC} ${VAULT_TPM_SRC_DIR}/microchip/atecc608a.c)
+    include(${OCKAM_C_BASE}/tools/cmake/third-party/microchip.cmake)
 endif()
 
 
-####################
-# SW Specific Code #
-####################
+######################
+# Host Specific Code #
+######################
 
-# mbedTLS Specific Config
-if(VAULT_SW_MBEDTLS)
-    set(VAULT_SRC ${VAULT_SRC} ${VAULT_SW_SRC_DIR}/mbedtls.c)
+# Ockam Host Code
+if(VAULT_HOST_OCKAM)
+    set(VAULT_SRC ${VAULT_SRC} ${VAULT_HOST_SRC_DIR}/ockam.c)
 endif()
 
-# mbed Crypto Specific Config
-if(VAULT_SW_MBEDCRYPTO)
-    set(VAULT_SRC ${VAULT_SRC} ${VAULT_SW_SRC_DIR}/mbedcrypto.c)
+# mbed crypto Host Code
+if(VAULT_HOST_MBEDCRYPTO)
+    set(VAULT_SRC ${VAULT_SRC} ${VAULT_HOST_SRC_DIR}/mbedcrypto.c)
+    include(${OCKAM_C_BASE}/tools/cmake/third-party/mbedcrypto.cmake)
 endif()
 
-# LibSodiumSpecific Config
-if(VAULT_SW_LIBSODIUM)
-    set(VAULT_SRC ${VAULT_SRC} ${VAULT_SW_SRC_DIR}/libsodium.c)
-endif()
-
-
-########################
-# Vendor Specific Code #
-########################
-
-# For Microchip Hardware, add cryptoauthlib
-if(VAULT_HW_VENDOR_MICROCHIP)
-    set(VAULT_INC ${VAULT_INC} ${VAULT_HW_SRC_DIR}/microchip/)
-    set(VAULT_INC ${VAULT_INC} ${THIRD_PARTY_DIR}/microchip/)
-    set(VAULT_INC ${VAULT_INC} ${THIRD_PARTY_DIR}/microchip/cryptoauthlib/lib)
-    set(VAULT_INC ${VAULT_INC} ${THIRD_PARTY_DIR}/microchip/cryptoauthlib/lib/hal)
-
-    if(VAULT_IFACE_I2C)
-        set(ATCA_HAL_I2C ON CACHE BOOL "")
-        set(ATCA_BUILD_SHARED_LIBS OFF CACHE BOOL "")
-    endif()
-    add_subdirectory(${THIRD_PARTY_DIR}/microchip/cryptoauthlib cryptoauthlib)
-endif()
-
-# For mbed TLS, add the library
-if(VAULT_SW_MBEDTLS)
-    set(VAULT_INC ${VAULT_INC} ${THIRD_PARTY_DIR}/arm/mbedtls/include)
-
-    set(ENABLE_TESTING OFF CACHE BOOL "")
-    set(ENABLE_PROGRAMS OFF CACHE BOOL "")
-    add_subdirectory(${THIRD_PARTY_DIR}/arm/mbedtls mbedtls)
-endif()
-
-# For mbed Crypto, add the library
-if(VAULT_SW_MBEDCRYPTO)
-    set(VAULT_INC ${VAULT_INC} ${THIRD_PARTY_DIR}/arm/mbed-crypto/include)
-
-    set(ENABLE_TESTING OFF CACHE BOOL "")
-    set(ENABLE_PROGRAMS OFF CACHE BOOL "")
-    add_subdirectory(${THIRD_PARTY_DIR}/arm/mbed-crypto mbed-crypto)
-endif()
-
-####################
-# Interface Option #
-####################
-
-if(VAULT_IFACE_I2C)
-    add_definitions(-DVAULT_IFACE_I2C)
-endif()
-
-if(VAULT_IFACE_SPI)
-    add_definitions(-DVAULT_IFACE_SPI)
-endif()
-
-if(VAULT_IFACE_UART)
-    add_definitions(-DVAULT_IFACE_UART)
+# OpenSSL Config
+if(VAULT_HOST_OpenSSL)
+    set(VAULT_SRC ${VAULT_SRC} ${VAULT_HOST_SRC_DIR}/openssl.c)
+    include(${OCKAM_C_CMAKE_THIRD_PARTY}/openssl.cmake)
 endif()
 
 

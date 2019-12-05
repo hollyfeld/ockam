@@ -16,8 +16,8 @@
 
 #include <ockam/kal.h>
 #include <ockam/vault.h>
-#include <ockam/vault/hardware.h>
-#include <ockam/vault/software.h>
+#include <ockam/vault/tpm.h>
+#include <ockam/vault/host.h>
 
 #if !defined(OCKAM_VAULT_CONFIG_FILE)
 #error "Error: Ockam Vault Config File Missing"
@@ -86,7 +86,7 @@ static VAULT_STATE_e g_vault_state = VAULT_STATE_UNINIT;
  *
  * @brief   Initialize the Ockam Vault
  *
- * @param   p_cfg   Configuration values for the hardware and/or software library
+ * @param   p_cfg   Configuration values for a TPM and/or a host software library
  *
  * @return  OCKAM_ERR_NONE if initialized successfully. OCKAM_ERR_VAULT_ALREADY_INIT if already
  *          initialized. Other errors if specific chip fails init.
@@ -112,19 +112,19 @@ OCKAM_ERR ockam_vault_init(OCKAM_VAULT_CFG_s *p_cfg)
         }
 
 
-#if(OCKAM_VAULT_CFG_INIT & OCKAM_VAULT_CFG_HW)
-        ret_val = ockam_vault_hw_init(p_cfg->p_hw);             /* Initialize the hw code if needed                   */
+#if(OCKAM_VAULT_CFG_INIT & OCKAM_VAULT_CFG_TPM)
+        ret_val = ockam_vault_tpm_init(p_cfg->p_tpm);           /* Initialize the TPM code if needed                  */
         if(ret_val != OCKAM_ERR_NONE) {
             break;
         }
 #endif
 
-#if(OCKAM_VAULT_CFG_INIT & OCKAM_VAULT_CFG_SW)
-        ret_val = ockam_vault_sw_init(p_cfg->p_sw);             /* Initialize the software lib code if needed         */
+#if(OCKAM_VAULT_CFG_INIT & OCKAM_VAULT_CFG_HOST)
+        ret_val = ockam_vault_host_init(p_cfg->p_host);         /* Initialize the host software lib code if needed    */
 
-        if(ret_val != OCKAM_ERR_NONE) {                         /* If the software lib fails, free the hw if necessary*/
-#if(OCKAM_VAULT_CFG_INIT & OCKAM_VAULT_CFG_HW)
-            ockam_vault_hw_free();
+        if(ret_val != OCKAM_ERR_NONE) {                         /* If the software lib fails, free tpm if necessary   */
+#if(OCKAM_VAULT_CFG_INIT & OCKAM_VAULT_CFG_TPM)
+            ockam_vault_tpm_free();
 #endif
             break;
         }
@@ -163,11 +163,6 @@ OCKAM_ERR ockam_vault_random(uint8_t *p_rand_num, uint32_t rand_num_size)
     OCKAM_ERR t_ret_val;
 
     do {
-        if((p_rand_num == OCKAM_NULL) || (rand_num_size == 0)) {/* Ensure the buffer is not null and the random size  */
-            ret_val = OCKAM_ERR_INVALID_PARAM;                  /* is greater than 0                                  */
-            break;
-        }
-
         ret_val = ockam_kal_mutex_lock(&g_vault_mutex, 0, 0);   /* Lock the mutex before checking the state           */
         if(ret_val != OCKAM_ERR_NONE) {
             break;
@@ -178,12 +173,12 @@ OCKAM_ERR ockam_vault_random(uint8_t *p_rand_num, uint32_t rand_num_size)
             break;
         }
 
-#if(OCKAM_VAULT_CFG_RAND & OCKAM_VAULT_CFG_HW)
-        ret_val = ockam_vault_hw_random(p_rand_num,             /* Get a random number from hardware                  */
-                                        rand_num_size);
-#elif(OCKAM_VAULT_CFG_RAND & OCKAM_VAULT_CFG_SW)
-        ret_val = ockam_vault_sw_random(p_rand_num,             /* Get a random number from the sw lib                */
-                                        rand_num_size);
+#if(OCKAM_VAULT_CFG_RAND & OCKAM_VAULT_CFG_TPM)
+        ret_val = ockam_vault_tpm_random(p_rand_num,            /* Get a random number from the TPM                   */
+                                         rand_num_size);
+#elif(OCKAM_VAULT_CFG_RAND & OCKAM_VAULT_CFG_HOST)
+        ret_val = ockam_vault_host_random(p_rand_num,           /* Get a random number from the host library          */
+                                          rand_num_size);
 #else
 #error "Ockam Vault: Random function not specified"
 #endif
@@ -222,10 +217,6 @@ OCKAM_ERR ockam_vault_key_gen(OCKAM_VAULT_KEY_e key_type, uint8_t *p_key_pub, ui
 
 
     do {
-        if((p_key_pub == OCKAM_NULL) || (key_pub_size == 0)) {  /* Ensure the buffer is not null and the key size is  */
-            ret_val = OCKAM_ERR_INVALID_PARAM;                  /* greater than zero                                  */
-        }
-
         ret_val = ockam_kal_mutex_lock(&g_vault_mutex, 0, 0);   /* Lock the mutex before checking the state or        */
         if(ret_val != OCKAM_ERR_NONE) {                         /* generating a key                                   */
             break;
@@ -236,12 +227,12 @@ OCKAM_ERR ockam_vault_key_gen(OCKAM_VAULT_KEY_e key_type, uint8_t *p_key_pub, ui
             break;
         }
 
-#if(OCKAM_VAULT_CFG_KEY_ECDH & OCKAM_VAULT_CFG_HW)
-        ret_val = ockam_vault_hw_key_gen(key_type,              /* Generate a key in hardware                         */
+#if(OCKAM_VAULT_CFG_KEY_ECDH & OCKAM_VAULT_CFG_TPM)
+        ret_val = ockam_vault_tpm_key_gen(key_type,             /* Generate a key in the TPM                          */
                                          p_key_pub,
                                          key_pub_size);
-#elif(OCKAM_VAULT_CFG_KEY_ECDH & OCKAM_VAULT_CFG_SW)
-        ret_val = ockam_vault_sw_key_gen(key_type,              /* Generate a key using the software lib              */
+#elif(OCKAM_VAULT_CFG_KEY_ECDH & OCKAM_VAULT_CFG_HOST)
+        ret_val = ockam_vault_host_key_gen(key_type,            /* Generate a key using the host library              */
                                              p_key_pub,
                                              key_pub_size);
 #else
@@ -283,10 +274,6 @@ OCKAM_ERR ockam_vault_key_get_pub(OCKAM_VAULT_KEY_e key_type, uint8_t *p_key_pub
 
 
     do {
-        if((p_key_pub == OCKAM_NULL) || (key_pub_size == 0)) {  /* Ensure the buffer is not null and the key size is  */
-            ret_val = OCKAM_ERR_INVALID_PARAM;                  /* greater than zero                                  */
-        }
-
         ret_val = ockam_kal_mutex_lock(&g_vault_mutex, 0, 0);   /* Lock the mutex before checking the state or        */
         if(ret_val != OCKAM_ERR_NONE) {                         /* getting the public key                             */
             break;
@@ -297,14 +284,14 @@ OCKAM_ERR ockam_vault_key_get_pub(OCKAM_VAULT_KEY_e key_type, uint8_t *p_key_pub
             break;
         }
 
-#if(OCKAM_VAULT_CFG_KEY_ECDH & OCKAM_VAULT_CFG_HW)
-        ret_val = ockam_vault_hw_key_get_pub(key_type,          /* Get a public key from hardware                     */
-                                             p_key_pub,
-                                             key_pub_size);
-#elif(OCKAM_VAULT_CFG_KEY_ECDH & OCKAM_VAULT_CFG_SW)
-        ret_val = ockam_vault_sw_key_get_pub(key_type,          /* Get a public key from the software lib             */
-                                                 p_key_pub,
-                                                 key_pub_size);
+#if(OCKAM_VAULT_CFG_KEY_ECDH & OCKAM_VAULT_CFG_TPM)
+        ret_val = ockam_vault_tpm_key_get_pub(key_type,         /* Get a public key from the TPM                      */
+                                              p_key_pub,
+                                              key_pub_size);
+#elif(OCKAM_VAULT_CFG_KEY_ECDH & OCKAM_VAULT_CFG_HOST)
+        ret_val = ockam_vault_host_key_get_pub(key_type,        /* Get a public key from the host library             */
+                                               p_key_pub,
+                                               key_pub_size);
 #else
 #error "Ockam Vault: Key Get Pub Function Missing"
 #endif
@@ -351,11 +338,6 @@ OCKAM_ERR ockam_vault_ecdh(OCKAM_VAULT_KEY_e key_type,
 
 
     do {
-        if((p_key_pub == OCKAM_NULL) || (key_pub_size == 0) ||  /* Ensure the buffers are not null and the size       */
-            p_pms == OCKAM_NULL || pms_size == 0) {             /* values are greater than zero                       */
-            ret_val = OCKAM_ERR_INVALID_PARAM;
-        }
-
         ret_val = ockam_kal_mutex_lock(&g_vault_mutex, 0, 0);   /* Lock the mutex before checking the state or        */
         if(ret_val != OCKAM_ERR_NONE) {                         /* performing the ECDH operation                      */
             break;
@@ -366,18 +348,18 @@ OCKAM_ERR ockam_vault_ecdh(OCKAM_VAULT_KEY_e key_type,
             break;
         }
 
-#if(OCKAM_VAULT_CFG_KEY_ECDH & OCKAM_VAULT_CFG_HW)
-        ret_val = ockam_vault_hw_ecdh(key_type,                 /* Perform an ECDH operation in hardware              */
-                                      p_key_pub,
-                                      key_pub_size,
-                                      p_pms,
-                                      pms_size);
-#elif(OCKAM_VAULT_CFG_KEY_ECDH & OCKAM_VAULT_CFG_SW)
-        ret_val = ockam_vault_sw_ecdh(key_type,                 /* Perform an ECDH operation in the software library  */
-                                          p_key_pub,
-                                          key_pub_size,
-                                          p_pms,
-                                          pms_size);
+#if(OCKAM_VAULT_CFG_KEY_ECDH & OCKAM_VAULT_CFG_TPM)
+        ret_val = ockam_vault_tpm_ecdh(key_type,                 /* Perform an ECDH operation in a TPM                 */
+                                       p_key_pub,
+                                       key_pub_size,
+                                       p_pms,
+                                       pms_size);
+#elif(OCKAM_VAULT_CFG_KEY_ECDH & OCKAM_VAULT_CFG_HOST)
+        ret_val = ockam_vault_host_ecdh(key_type,               /* Perform an ECDH operation in the host library      */
+                                        p_key_pub,
+                                        key_pub_size,
+                                        p_pms,
+                                        pms_size);
 #else
 #error "Ockam Vault: ECDH Function missing"
 #endif
@@ -434,10 +416,6 @@ OCKAM_ERR ockam_vault_hkdf(uint8_t *p_salt,
 
 
     do {
-        if((p_ikm == OCKAM_NULL) || (p_out == OCKAM_NULL)) {    /* Ensure the input key material and output buffers   */
-            ret_val = OCKAM_ERR_INVALID_PARAM;                  /* are not null. Salt and Info are optional.          */
-        }
-
         ret_val = ockam_kal_mutex_lock(&g_vault_mutex, 0, 0);   /* Lock the mutex before checking the state or        */
         if(ret_val != OCKAM_ERR_NONE) {                         /* performing the HKDF operation                      */
             break;
@@ -448,16 +426,16 @@ OCKAM_ERR ockam_vault_hkdf(uint8_t *p_salt,
             break;
         }
 
-#if(OCKAM_VAULT_CFG_HKDF & OCKAM_VAULT_CFG_HW)
-        ret_val = ockam_vault_hw_hkdf(p_salt, salt_size,        /* Perform an HKDF operation in hardware              */
-                                      p_ikm, ikm_size,
-                                      p_info, info_size,
-                                      p_out, out_size);
-#elif(OCKAM_VAULT_CFG_HKDF & OCKAM_VAULT_CFG_SW)
-        ret_val = ockam_vault_sw_hkdf(p_salt, salt_size,        /* Perform an HKDF operation in the software library  */
-                                      p_ikm, ikm_size,
-                                      p_info, info_size,
-                                      p_out, out_size);
+#if(OCKAM_VAULT_CFG_HKDF & OCKAM_VAULT_CFG_TPM)
+        ret_val = ockam_vault_tpm_hkdf(p_salt, salt_size,       /* Perform an HKDF operation in a TPM                 */
+                                       p_ikm, ikm_size,
+                                       p_info, info_size,
+                                       p_out, out_size);
+#elif(OCKAM_VAULT_CFG_HKDF & OCKAM_VAULT_CFG_HOST)
+        ret_val = ockam_vault_host_hkdf(p_salt, salt_size,        /* Perform an HKDF operation in the host library      */
+                                        p_ikm, ikm_size,
+                                        p_info, info_size,
+                                        p_out, out_size);
 #else
 #error "Ockam Vault: HKDF Function missing"
 #endif
@@ -470,4 +448,110 @@ OCKAM_ERR ockam_vault_hkdf(uint8_t *p_salt,
 
     return ret_val;
 }
+
+
+/**
+ ********************************************************************************************************
+ *                                      ockam_vault_aes_gcm_encrypt()
+ ********************************************************************************************************
+ */
+
+OCKAM_ERR ockam_vault_aes_gcm_encrypt(uint8_t *p_key, uint32_t key_size,
+                                      uint8_t *p_iv, uint32_t iv_size,
+                                      uint8_t *p_add, uint32_t add_size,
+                                      uint8_t *p_tag, uint32_t tag_size,
+                                      uint8_t *p_input, uint32_t input_size,
+                                      uint8_t *p_output, uint32_t output_size)
+{
+    return ockam_vault_aes_gcm(OCKAM_VAULT_AES_GCM_MODE_ENCRYPT,
+                               p_key, key_size,
+                               p_iv, iv_size,
+                               p_add, add_size,
+                               p_tag, tag_size,
+                               p_input, input_size,
+                               p_output, output_size);
+}
+
+/**
+ ********************************************************************************************************
+ *                                       ockam_vault_aes_gcm_decrypt()
+ ********************************************************************************************************
+ */
+
+OCKAM_ERR ockam_vault_aes_gcm_decrypt(uint8_t *p_key, uint32_t key_size,
+                                      uint8_t *p_iv, uint32_t iv_size,
+                                      uint8_t *p_add, uint32_t add_size,
+                                      uint8_t *p_tag, uint32_t tag_size,
+                                      uint8_t *p_input, uint32_t input_size,
+                                      uint8_t *p_output, uint32_t output_size)
+{
+    return ockam_vault_aes_gcm(OCKAM_VAULT_AES_GCM_MODE_DECRYPT,
+                               p_key, key_size,
+                               p_iv, iv_size,
+                               p_add, add_size,
+                               p_tag, tag_size,
+                               p_input, input_size,
+                               p_output, output_size);
+}
+
+
+/**
+ ********************************************************************************************************
+ *                                          ockam_vault_aes_gcm()
+ ********************************************************************************************************
+ */
+
+OCKAM_ERR ockam_vault_aes_gcm(OCKAM_VAULT_AES_GCM_MODE_e mode,
+                              uint8_t *p_key, uint32_t key_size,
+                              uint8_t *p_iv, uint32_t iv_size,
+                              uint8_t *p_add, uint32_t add_size,
+                              uint8_t *p_tag, uint32_t tag_size,
+                              uint8_t *p_input, uint32_t input_size,
+                              uint8_t *p_output, uint32_t output_size)
+{
+    OCKAM_ERR ret_val = OCKAM_ERR_NONE;
+    OCKAM_ERR t_ret_val = OCKAM_ERR_NONE;
+
+
+    do {
+        ret_val = ockam_kal_mutex_lock(&g_vault_mutex, 0, 0);   /* Lock the mutex before checking the state or        */
+        if(ret_val != OCKAM_ERR_NONE) {                         /* performing the AES GCM operation                   */
+            break;
+        }
+
+        if(g_vault_state != VAULT_STATE_IDLE) {                 /* Ensure vault is in an idle state before continuing */
+            ret_val = OCKAM_ERR_VAULT_UNINITIALIZED;
+            break;
+        }
+
+#if(OCKAM_VAULT_CFG_AES_GCM & OCKAM_VAULT_CFG_TPM)
+        ret_val = ockam_vault_tpm_aes_gcm(mode,                 /* Perform the AES GCM operation in the TPM           */
+                                          p_key, key_size,
+                                          p_iv, iv_size,
+                                          p_add, add_size,
+                                          p_tag, tag_size,
+                                          p_input, input_size,
+                                          p_output, output_size);
+#elif(OCKAM_VAULT_CFG_AES_GCM & OCKAM_VAULT_CFG_HOST)
+        ret_val = ockam_vault_host_aes_gcm(mode,                /* Perform the AES GCM operation in on the host       */
+                                           p_key, key_size,
+                                           p_iv, iv_size,
+                                           p_add, add_size,
+                                           p_tag, tag_size,
+                                           p_input, input_size,
+                                           p_output, output_size);
+#else
+#error "Ockam Vault: AES GCM Function missing"
+#endif
+    } while(0);
+
+    t_ret_val = ockam_kal_mutex_unlock(&g_vault_mutex, 0);      /* Unlock the mutex after all vault operations finish */
+    if(ret_val == OCKAM_ERR_NONE) {                             /* Don't overwrite ret_val if there was an error      */
+        ret_val = t_ret_val;                                    /* before the mutex unlock                            */
+    }
+
+    return ret_val;
+}
+
+
 

@@ -40,8 +40,8 @@ set(THIRD_PARTY_DIR ${OCKAM_C_BASE}/third-party)
 #################
 
 # Vault Hardware Build Options
-set(VAULT_HW_ATECC508A TRUE)
-set(VAULT_SW_MBEDCRYPTO TRUE)
+set(VAULT_TPM_ATECC508A TRUE)
+set(VAULT_HOST_MBEDCRYPTO TRUE)
 set(VAULT_IFACE_I2C TRUE)
 
 # KAL Build Option

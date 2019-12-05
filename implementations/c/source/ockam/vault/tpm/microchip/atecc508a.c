@@ -1,7 +1,7 @@
 /**
  ********************************************************************************************************
- * @file        atecc508a.c
- * @brief
+ * @file    atecc508a.c
+ * @brief   Ockam Vault Implementation for the ATECC508A
  ********************************************************************************************************
  */
 
@@ -17,7 +17,7 @@
 #include <ockam/kal.h>
 #include <ockam/memory.h>
 #include <ockam/vault.h>
-#include <ockam/vault/hardware/microchip.h>
+#include <ockam/vault/tpm/microchip.h>
 
 #include <cryptoauthlib/lib/cryptoauthlib.h>
 #include <cryptoauthlib/lib/atca_cfgs.h>
@@ -37,43 +37,43 @@
  ********************************************************************************************************
  */
 
-#define VAULT_MICROCHIP_ATECC508A_DEVREV_MIN        0x00005000  /* Minimum device rev from info                       */
-#define VAULT_MICROCHIP_ATECC508A_DEVREV_MAX        0x000050FF  /* Maximum device rev from info                       */
+#define ATECC508A_DEVREV_MIN                  0x00005000        /* Minimum device rev from info                       */
+#define ATECC508A_DEVREV_MAX                  0x000050FF        /* Maximum device rev from info                       */
 
-#define VAULT_ATECC508A_PMS_SIZE                    32u         /* Size of the pre-master secret                      */
-#define VAULT_ATECC508A_RAND_SIZE                   32u         /* Size of the random number generated                */
-#define VAULT_ATECC508A_PUB_KEY_SIZE                64u         /* Size of public key                                 */
+#define ATECC508A_PMS_SIZE                    32u               /* Size of the pre-master secret                      */
+#define ATECC508A_RAND_SIZE                   32u               /* Size of the random number generated                */
+#define ATECC508A_PUB_KEY_SIZE                64u               /* Size of public key                                 */
 
-#define VAULT_ATECC508A_KEY_SLOT_STATIC              0u         /* Slot with the preloaded private key                */
-#define VAULT_ATECC508A_KEY_SLOT_EPHEMERAL   ATCA_TEMPKEY_KEYID /* Slot with the generated ephemeral key              */
+#define ATECC508A_KEY_SLOT_STATIC              0u               /* Slot with the preloaded private key                */
+#define ATECC508A_KEY_SLOT_EPHEMERAL   ATCA_TEMPKEY_KEYID       /* Slot with the generated ephemeral key              */
 
 
-#define VAULT_ATECC508A_CFG_I2C_ENABLE_SHIFT        0u
-#define VAULT_ATECC508A_CFG_I2C_ENABLE_SINGLE_WIRE  0u
-#define VAULT_ATECC508A_CFG_I2C_ENABLE_I2C          1u
+#define ATECC508A_CFG_I2C_ENABLE_SHIFT        0u
+#define ATECC508A_CFG_I2C_ENABLE_SINGLE_WIRE  0u
+#define ATECC508A_CFG_I2C_ENABLE_I2C          1u
 
-#define VAULT_ATECC508A_CFG_I2C_ADDRESS_SHIFT       1u
+#define ATECC508A_CFG_I2C_ADDRESS_SHIFT       1u
 
-#define VAULT_ATECC508A_CFG_OTP_MODE_READ_ONLY      0xAA        /* Writes to OTP are forbidden                        */
-#define VAULT_ATECC508A_CFG_OTP_MODE_CONSUMPTION    0x55        /* Allows reads and writes to OTP                     */
+#define ATECC508A_CFG_OTP_MODE_READ_ONLY      0xAA              /* Writes to OTP are forbidden                        */
+#define ATECC508A_CFG_OTP_MODE_CONSUMPTION    0x55              /* Allows reads and writes to OTP                     */
 
-#define VAULT_ATECC508A_CFG_CHIP_MODE_WDOG_SHIFT    2u          /* Shift for the watchdog configuration bit           */
-#define VAULT_ATECC508A_CFG_CHIP_MODE_WDOG_1_3_S    0u          /*  Set watchdog to 1.3 seconds - Recommended         */
-#define VAULT_ATECC508A_CFG_CHIP_MODE_WDOG_10_0_S   1u          /*  Set watchdog to 10 seconds                        */
+#define ATECC508A_CFG_CHIP_MODE_WDOG_SHIFT    2u                /* Shift for the watchdog configuration bit           */
+#define ATECC508A_CFG_CHIP_MODE_WDOG_1_3_S    0u                /*  Set watchdog to 1.3 seconds - Recommended         */
+#define ATECC508A_CFG_CHIP_MODE_WDOG_10_0_S   1u                /*  Set watchdog to 10 seconds                        */
 
-#define VAULT_ATECC508A_CFG_CHIP_MODE_TTL_SHIFT     1u          /* Shift for TTL Enable                               */
-#define VAULT_ATECC508A_CFG_CHIP_MODE_TTL_FIXED     0u          /*  Input levels use fixed reference                  */
-#define VAULT_ATECC508A_CFG_CHIP_MODE_TTL_VCC       1u          /*  Input levels are VCC referenced                   */
+#define ATECC508A_CFG_CHIP_MODE_TTL_SHIFT     1u                /* Shift for TTL Enable                               */
+#define ATECC508A_CFG_CHIP_MODE_TTL_FIXED     0u                /*  Input levels use fixed reference                  */
+#define ATECC508A_CFG_CHIP_MODE_TTL_VCC       1u                /*  Input levels are VCC referenced                   */
 
-#define VAULT_ATECC508A_CFG_CHIP_MODE_SEL_SHIFT     0u          /* Shift for Selector Mode                            */
-#define VAULT_ATECC508A_CFG_CHIP_MODE_SEL_ALWAYS    0u          /*  Selector can always be written with UpdateExtra   */
-#define VAULT_ATECC508A_CFG_CHIP_MODE_SEL_LIMITED   1u          /*  Selector can only be written if value is 0        */
+#define ATECC508A_CFG_CHIP_MODE_SEL_SHIFT     0u                /* Shift for Selector Mode                            */
+#define ATECC508A_CFG_CHIP_MODE_SEL_ALWAYS    0u                /*  Selector can always be written with UpdateExtra   */
+#define ATECC508A_CFG_CHIP_MODE_SEL_LIMITED   1u                /*  Selector can only be written if value is 0        */
 
-#define VAULT_ATECC508A_CFG_LOCK_VALUE_UNLOCKED     0x55        /* Data and OTP are in an unlocked/configurable state */
-#define VAULT_ATECC508A_CFG_LOCK_VALUE_LOCKED       0x00        /* Data and OTP are in a locked/unconfigurable state  */
+#define ATECC508A_CFG_LOCK_VALUE_UNLOCKED     0x55              /* Data and OTP are in an unlocked/configurable state */
+#define ATECC508A_CFG_LOCK_VALUE_LOCKED       0x00              /* Data and OTP are in a locked/unconfigurable state  */
 
-#define VAULT_ATECC508A_CFG_LOCK_CONFIG_UNLOCKED    0x55        /* Config zone is in an unlocked/configurable state   */
-#define VAULT_ATECC508A_CFG_LOCK_CONFIG_LOCKED      0x00        /* Config zone is in a locked/unconfigurable state    */
+#define ATECC508A_CFG_LOCK_CONFIG_UNLOCKED    0x55              /* Config zone is in an unlocked/configurable state   */
+#define ATECC508A_CFG_LOCK_CONFIG_LOCKED      0x00              /* Config zone is in a locked/unconfigurable state    */
 
 
 /*
@@ -91,7 +91,7 @@
 
 /**
  *******************************************************************************
- * @struct  VAULT_ATECC508A_CFG_DATA_s
+ * @struct  ATECC508A_CFG_DATA_s
  * @brief
  *******************************************************************************
  */
@@ -118,7 +118,7 @@ typedef struct {                                                /*!< Byte(s): De
     uint16_t rfu;                                               /*!< 90-91  : Must be 0                               */
     uint32_t x509_format;                                       /*!< 92-95  : Template length & public position config*/
     uint16_t key_config[16];                                    /*!< 96-127 : 16 key configurations                   */
-} VAULT_ATECC508A_CFG_DATA_s;
+} ATECC508A_CFG_DATA_s;
 
 
 /*
@@ -133,7 +133,7 @@ typedef struct {                                                /*!< Byte(s): De
  ********************************************************************************************************
  */
 
-static VAULT_ATECC508A_CFG_DATA_s *g_atecc508a_cfg_data;
+static ATECC508A_CFG_DATA_s *g_atecc508a_cfg_data;
 
 
 /*
@@ -149,22 +149,23 @@ static VAULT_ATECC508A_CFG_DATA_s *g_atecc508a_cfg_data;
  */
 
 
-/**
+/*
  ********************************************************************************************************
- *                                         ockam_vault_hw_init()
- *
- * @brief   Initialize the ATECC508A for Ockam Vault
- *
- * @param   p_arg   Optional void* argument
- *
- * @return  OCKAM_ERR_NONE if initialized successfully. OCKAM_ERR_VAULT_ALREADY_INIT if already
- *          initialized. Other errors if specific chip fails init.
- *
+ ********************************************************************************************************
+ *                                         OCKAM_VAULT_CFG_INIT
+ ********************************************************************************************************
  ********************************************************************************************************
  */
 
-#if(OCKAM_VAULT_CFG_INIT & OCKAM_VAULT_HW_MICROCHIP_ATECC508A)
-OCKAM_ERR ockam_vault_hw_init(void *p_arg)
+#if(OCKAM_VAULT_CFG_INIT & OCKAM_VAULT_TPM_MICROCHIP_ATECC508A)
+
+/*
+ ********************************************************************************************************
+ *                                         ockam_vault_tpm_init()
+ ********************************************************************************************************
+ */
+
+OCKAM_ERR ockam_vault_tpm_init(void *p_arg)
 {
     OCKAM_ERR ret_val = OCKAM_ERR_NONE;
     ATCA_STATUS status;
@@ -182,84 +183,76 @@ OCKAM_ERR ockam_vault_hw_init(void *p_arg)
         if(atecc508a_cfg->iface == VAULT_MICROCHIP_IFACE_I2C) {
             status = atcab_init(atecc508a_cfg->iface_cfg);      /* Call Cryptolib to initialize the ATECC508A via I2C */
             if(status != ATCA_SUCCESS) {
-                ret_val = OCKAM_ERR_VAULT_HW_INIT_FAIL;
+                ret_val = OCKAM_ERR_VAULT_TPM_INIT_FAIL;
                 break;
             }
         } else {                                                /* Single-wire or HID is not supported at this time   */
-            ret_val = OCKAM_ERR_VAULT_HW_UNSUPPORTED_IFACE;
+            ret_val = OCKAM_ERR_VAULT_TPM_UNSUPPORTED_IFACE;
             break;
         }
 
         ret_val = ockam_mem_alloc((void*) g_atecc508a_cfg_data, /* Allocate memory for the configuration structure    */
-                                  sizeof(VAULT_ATECC508A_CFG_DATA_s));
+                                  sizeof(ATECC508A_CFG_DATA_s));
                                                                 /* Read the configuration of the ATECC508A            */
         status = atcab_read_config_zone((uint8_t*) g_atecc508a_cfg_data);
         if(status != ATCA_SUCCESS) {
-            ret_val = OCKAM_ERR_VAULT_HW_ID_FAIL;
+            ret_val = OCKAM_ERR_VAULT_TPM_ID_FAIL;
             break;
         }
                                                                 /* Ensure the revision is valid for the ATECC508A     */
-        if((g_atecc508a_cfg_data->revision < VAULT_MICROCHIP_ATECC508A_DEVREV_MIN) ||
-           (g_atecc508a_cfg_data->revision > VAULT_MICROCHIP_ATECC508A_DEVREV_MAX)) {
-            ret_val = OCKAM_ERR_VAULT_HW_ID_INVALID;
+        if((g_atecc508a_cfg_data->revision < ATECC508A_DEVREV_MIN) ||
+           (g_atecc508a_cfg_data->revision > ATECC508A_DEVREV_MAX)) {
+            ret_val = OCKAM_ERR_VAULT_TPM_ID_INVALID;
             break;
         }
                                                                 /* Ensure hardware configuration and data is locked   */
-        if((g_atecc508a_cfg_data->lock_config != VAULT_ATECC508A_CFG_LOCK_CONFIG_LOCKED) ||
-           (g_atecc508a_cfg_data->lock_value != VAULT_ATECC508A_CFG_LOCK_CONFIG_LOCKED)) {
-            ret_val = OCKAM_ERR_VAULT_HW_UNLOCKED;
+        if((g_atecc508a_cfg_data->lock_config != ATECC508A_CFG_LOCK_CONFIG_LOCKED) ||
+           (g_atecc508a_cfg_data->lock_value != ATECC508A_CFG_LOCK_CONFIG_LOCKED)) {
+            ret_val = OCKAM_ERR_VAULT_TPM_UNLOCKED;
             break;
         }
     } while(0);
 
     return ret_val;
 }
-#endif
 
-
-/**
+/*
  ********************************************************************************************************
- *                                          ockam_vault_hw_free()
- *
- * @brief   Free the hardware and all associated data structures
- *
- * @return  OCKAM_ERR_NONE on success.
- *
+ *                                          ockam_vault_tpm_free()
  ********************************************************************************************************
  */
 
-#if(OCKAM_VAULT_CFG_INIT & OCKAM_VAULT_HW_MICROCHIP_ATECC508A)
-OCKAM_ERR ockam_vault_hw_free (void)
+OCKAM_ERR ockam_vault_tpm_free (void)
 {
    return OCKAM_ERR_NONE;
 }
+
 #endif
 
-
-/**
+/*
  ********************************************************************************************************
- *                                        ockam_vault_hw_random()
- *
- * @brief   Generate and return a random number
- *
- * @param   p_rand_num[out]     32-byte array to be filled with the random number
- *
- * @param   rand_num_size[in]   The size of the desired random number & buffer passed in. Used to verify
- *                              correct size.
- *
- * @return  OCKAM_ERR_NONE if successful. OCKAM_ERR_VAULT_INVALID_SIZE if size
- *
+ ********************************************************************************************************
+ *                                         OCKAM_VAULT_CFG_RAND
+ ********************************************************************************************************
  ********************************************************************************************************
  */
 
-#if(OCKAM_VAULT_CFG_INIT & OCKAM_VAULT_HW_MICROCHIP_ATECC508A)
-OCKAM_ERR ockam_vault_hw_random(uint8_t *p_rand_num, uint32_t rand_num_size)
+#if(OCKAM_VAULT_CFG_RAND == OCKAM_VAULT_TPM_MICROCHIP_ATECC508A)
+
+
+/*
+ ********************************************************************************************************
+ *                                        ockam_vault_tpm_random()
+ ********************************************************************************************************
+ */
+
+OCKAM_ERR ockam_vault_tpm_random(uint8_t *p_rand_num, uint32_t rand_num_size)
 {
     OCKAM_ERR ret_val = OCKAM_ERR_NONE;
 
 
     do {
-        if(rand_num_size != VAULT_ATECC508A_RAND_SIZE) {        /* Make sure the expected size matches the buffer     */
+        if(rand_num_size != ATECC508A_RAND_SIZE) {              /* Make sure the expected size matches the buffer     */
             ret_val = OCKAM_ERR_VAULT_SIZE_MISMATCH;
             break;
         }
@@ -269,24 +262,29 @@ OCKAM_ERR ockam_vault_hw_random(uint8_t *p_rand_num, uint32_t rand_num_size)
 
     return ret_val;
 }
-#endif
 
 
-/**
+#endif                                                          /* OCKAM_VAULT_CFG_RAND                               */
+
+
+/*
  ********************************************************************************************************
- *                                        ockam_vault_hw_key_gen()
- *
- * @brief   Generate an keypair on the ATECC508A
- *
- * @param   key_type[in]    The type of key pair to generate.
- *
- * @return  OCKAM_ERR_NONE if successful.
- *
+ ********************************************************************************************************
+ *                                      OCKAM_VAULT_CFG_KEY_ECDH
+ ********************************************************************************************************
  ********************************************************************************************************
  */
 
-#if(OCKAM_VAULT_CFG_INIT & OCKAM_VAULT_HW_MICROCHIP_ATECC508A)
-OCKAM_ERR ockam_vault_hw_key_gen(OCKAM_VAULT_KEY_e key_type)
+#if(OCKAM_VAULT_CFG_KEY_ECDH == OCKAM_VAULT_TPM_MICROCHIP_ATECC508A)
+
+
+/*
+ ********************************************************************************************************
+ *                                        ockam_vault_tpm_key_gen()
+ ********************************************************************************************************
+ */
+
+OCKAM_ERR ockam_vault_tpm_key_gen(OCKAM_VAULT_KEY_e key_type)
 {
     OCKAM_ERR ret_val = OCKAM_ERR_NONE;
 
@@ -294,11 +292,11 @@ OCKAM_ERR ockam_vault_hw_key_gen(OCKAM_VAULT_KEY_e key_type)
     do
     {
         if(key_type == OCKAM_VAULT_KEY_STATIC) {                /* Static private key preloaded on ATECC508A          */
-            atcab_genkey(VAULT_ATECC508A_KEY_SLOT_STATIC, 0);
+            atcab_genkey(ATECC508A_KEY_SLOT_STATIC, 0);
         }
 
         else if(key_type == OCKAM_VAULT_KEY_EPHEMERAL) {        /* Generate a temp key                                */
-            atcab_genkey(VAULT_ATECC508A_KEY_SLOT_EPHEMERAL, 0);
+            atcab_genkey(ATECC508A_KEY_SLOT_EPHEMERAL, 0);
             atcab_genkey(ATCA_TEMPKEY_KEYID, 0);
         }
 
@@ -310,31 +308,17 @@ OCKAM_ERR ockam_vault_hw_key_gen(OCKAM_VAULT_KEY_e key_type)
 
     return ret_val;
 }
-#endif
 
 
-/**
+/*
  ********************************************************************************************************
- *                                        ockam_vault_hw_key_get_pub()
- *
- * @brief   Get a public key from the ATECC508A
- *
- * @param   key_type[in]        OCKAM_VAULT_KEY_STATIC if requesting static public key
- *                              OCKAM_VAULT_KEY_EPHEMERAL if requesting the ephemeral public key
- *
- * @param   p_pub_key[out]      Buffer to place the public key in
- *
- * @param   pub_key_size[in]    Size of the public key buffer
- *
- * @return  OCKAM_ERR_NONE if successful.
- *
+ *                                        ockam_vault_tpm_key_get_pub()
  ********************************************************************************************************
  */
 
-#if(OCKAM_VAULT_CFG_INIT & OCKAM_VAULT_HW_MICROCHIP_ATECC508A)
-OCKAM_ERR ockam_vault_hw_key_get_pub(OCKAM_VAULT_KEY_e key_type,
-                                     uint8_t *p_pub_key,
-                                     uint32_t pub_key_size)
+OCKAM_ERR ockam_vault_tpm_key_get_pub(OCKAM_VAULT_KEY_e key_type,
+                                      uint8_t *p_pub_key,
+                                      uint32_t pub_key_size)
 {
     ATCA_STATUS status;
     OCKAM_ERR ret_val = OCKAM_ERR_NONE;
@@ -347,27 +331,27 @@ OCKAM_ERR ockam_vault_hw_key_get_pub(OCKAM_VAULT_KEY_e key_type,
             break;
         }
 
-        if(pub_key_size != VAULT_ATECC508A_PUB_KEY_SIZE) {
+        if(pub_key_size != ATECC508A_PUB_KEY_SIZE) {
             ret_val = OCKAM_ERR_VAULT_SIZE_MISMATCH;
             break;
         }
 
         switch(key_type) {
             case OCKAM_VAULT_KEY_STATIC:                        /* Get the static public key                          */
-                status = atcab_genkey(VAULT_ATECC508A_KEY_SLOT_STATIC,
+                status = atcab_genkey(ATECC508A_KEY_SLOT_STATIC,
                                       p_pub_key);
 
                 if(status != ATCA_SUCCESS) {
-                    ret_val = OCKAM_ERR_VAULT_HW_KEY_FAIL;
+                    ret_val = OCKAM_ERR_VAULT_TPM_KEY_FAIL;
                 }
                 break;
 
             case OCKAM_VAULT_KEY_EPHEMERAL:                     /* Get the generated ephemeral public key             */
-                status = atcab_genkey(VAULT_ATECC508A_KEY_SLOT_EPHEMERAL,
+                status = atcab_genkey(ATECC508A_KEY_SLOT_EPHEMERAL,
                                        p_pub_key);
 
                 if(status != ATCA_SUCCESS) {
-                    ret_val = OCKAM_ERR_VAULT_HW_KEY_FAIL;
+                    ret_val = OCKAM_ERR_VAULT_TPM_KEY_FAIL;
                 }
                 break;
 
@@ -379,37 +363,19 @@ OCKAM_ERR ockam_vault_hw_key_get_pub(OCKAM_VAULT_KEY_e key_type,
 
     return ret_val;
 }
-#endif
-
 
 
 /**
  ********************************************************************************************************
- *                                        ockam_vault_hw_ecdh()
- *
- * @brief   Perform ECDH using the specified key
- *
- * @param   key_type[in]        Specify which key type to use in the ECDH execution
- *
- * @param   p_pub_key[in]       Buffer with the public key
- *
- * @param   pub_key_size[in]    Size of the public key buffer
- *
- * @param   p_pms[out]          Pre-master secret from ECDH
- *
- * @param   pms_size[in]        Size of the pre-master secret buffer
- *
- * @return  OCKAM_ERR_NONE if successful.
- *
+ *                                        ockam_vault_tpm_ecdh()
  ********************************************************************************************************
  */
 
-#if(OCKAM_VAULT_CFG_INIT & OCKAM_VAULT_HW_MICROCHIP_ATECC508A)
-OCKAM_ERR ockam_vault_hw_ecdh(OCKAM_VAULT_KEY_e key_type,
-                              uint8_t *p_pub_key,
-                              uint32_t pub_key_size,
-                              uint8_t *p_pms,
-                              uint32_t pms_size)
+OCKAM_ERR ockam_vault_tpm_ecdh(OCKAM_VAULT_KEY_e key_type,
+                               uint8_t *p_pub_key,
+                               uint32_t pub_key_size,
+                               uint8_t *p_pms,
+                               uint32_t pms_size)
 {
     OCKAM_ERR ret_val = OCKAM_ERR_NONE;
     ATCA_STATUS status;
@@ -423,8 +389,8 @@ OCKAM_ERR ockam_vault_hw_ecdh(OCKAM_VAULT_KEY_e key_type,
             break;
         }
 
-        if((pub_key_size != VAULT_ATECC508A_PUB_KEY_SIZE) ||    /* Validate the size of the buffers passed in         */
-           (pms_size != VAULT_ATECC508A_PMS_SIZE))
+        if((pub_key_size != ATECC508A_PUB_KEY_SIZE) ||          /* Validate the size of the buffers passed in         */
+           (pms_size != ATECC508A_PMS_SIZE))
         {
             ret_val = OCKAM_ERR_VAULT_SIZE_MISMATCH;
             break;
@@ -434,11 +400,11 @@ OCKAM_ERR ockam_vault_hw_ecdh(OCKAM_VAULT_KEY_e key_type,
 
             case OCKAM_VAULT_KEY_STATIC:                        /* If using the static key, specify which slot        */
 
-                status = atcab_ecdh(VAULT_ATECC508A_KEY_SLOT_STATIC,
+                status = atcab_ecdh(ATECC508A_KEY_SLOT_STATIC,
                                     p_pub_key,
                                     p_pms);
                 if(status != ATCA_SUCCESS) {
-                    ret_val = OCKAM_ERR_VAULT_HW_ECDH_FAIL;
+                    ret_val = OCKAM_ERR_VAULT_TPM_ECDH_FAIL;
                 }
                 break;
 
@@ -447,7 +413,7 @@ OCKAM_ERR ockam_vault_hw_ecdh(OCKAM_VAULT_KEY_e key_type,
                 status = atcab_ecdh_tempkey(p_pub_key,
                                             p_pms);
                 if(status != ATCA_SUCCESS) {
-                    ret_val = OCKAM_ERR_VAULT_HW_ECDH_FAIL;
+                    ret_val = OCKAM_ERR_VAULT_TPM_ECDH_FAIL;
                 }
                 break;
 
@@ -459,5 +425,32 @@ OCKAM_ERR ockam_vault_hw_ecdh(OCKAM_VAULT_KEY_e key_type,
 
     return ret_val;
 }
-#endif
+
+#endif                                                          /* OCKAM_VAULT_CFG_KEY_ECDH                           */
+
+
+/*
+ ********************************************************************************************************
+ ********************************************************************************************************
+ *                                         OCKAM_VAULT_CFG_HKDF
+ ********************************************************************************************************
+ ********************************************************************************************************
+ */
+
+#if(OCKAM_VAULT_CFG_HKDF == OCKAM_VAULT_TPM_MICROCHIP_ATECC508A)
+#error "Error: OCKAM_VAULT_CFG_HKDF invalid for ATECC508A"
+#endif                                                          /* OCKAM_VAULT_CFG_HKDF                               */
+
+
+/*
+ ********************************************************************************************************
+ ********************************************************************************************************
+ *                                       OCKAM_VAULT_CFG_AES_GCM
+ ********************************************************************************************************
+ ********************************************************************************************************
+ */
+
+#if(OCKAM_VAULT_CFG_AES_GCM == OCKAM_VAULT_TPM_MICROCHIP_ATECC508A)
+#error "Error: OCKAM_VAULT_CFG_AES_GCM invalid for ATECC508A"
+#endif                                                          /* OCKAM_VAULT_CFG_AES_GCM                            */
 

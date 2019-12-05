@@ -1,7 +1,7 @@
 /**
 ********************************************************************************************************
  * @file        test_atecc508a.c
- * @brief   
+ * @brief
  ********************************************************************************************************
  */
 
@@ -19,7 +19,7 @@
 #include <ockam/error.h>
 
 #include <ockam/vault.h>
-#include <ockam/vault/hardware/microchip.h>
+#include <ockam/vault/tpm/microchip.h>
 
 #include <cryptoauthlib/lib/cryptoauthlib.h>
 #include <cryptoauthlib/lib/atca_cfgs.h>
@@ -81,8 +81,8 @@ VAULT_MICROCHIP_CFG_s atecc508a_cfg = {
 
 OCKAM_VAULT_CFG_s vault_cfg =
 {
-    .p_hw                       = &atecc508a_cfg,
-    .p_sw                       = 0
+    .p_tpm                       = &atecc508a_cfg,
+    .p_host                      = 0
 };
 
 
@@ -106,9 +106,9 @@ OCKAM_VAULT_CFG_s vault_cfg =
  * @brief   Main point of entry
 
  * @param   None
- * 
+ *
  * @return  None
- * 
+ *
  ********************************************************************************************************
  */
 
@@ -136,7 +136,7 @@ void main (void)
     /* Random Number Generation */
     /* ------------------------ */
 
-    err = ockam_vault_random(&rand_num,                         /* Generate a random number                           */
+    err = ockam_vault_random((uint8_t*) &rand_num,              /* Generate a random number                           */
                              TEST_ATECC508A_RAND_NUM_SIZE);
     if(err != OCKAM_ERR_NONE) {
         printf("Error: Ockam Vault Random failed\r\n");
@@ -164,7 +164,7 @@ void main (void)
         printf("Error: Ockam Vault Static Key Generate Failed\r\n");
     }
 
-    err = ockam_vault_key_gen(OCKAM_VAULT_KEY_EPHEMERAL,        /* Generate an ephemrmal key                          */ 
+    err = ockam_vault_key_gen(OCKAM_VAULT_KEY_EPHEMERAL,        /* Generate an ephemrmal key                          */
                               &key_static[0],
                               TEST_ATECC508A_PUB_KEY_SIZE);
     if(err != OCKAM_ERR_NONE) {

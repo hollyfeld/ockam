@@ -44,6 +44,19 @@ typedef enum {
 } OCKAM_VAULT_KEY_e;
 
 
+/**
+ *******************************************************************************
+ * @enum    OCKAM_VAULT_AES_GCM_MODE_e
+ * @brief   Specifies the mode of operation for AES GCM
+ *******************************************************************************
+ */
+typedef enum {
+    OCKAM_VAULT_AES_GCM_MODE_ENCRYPT = 0,                       /*!< Encrypt using AES GCM                            */
+    OCKAM_VAULT_AES_GCM_MODE_DECRYPT                            /*!< Decrypt using AES GCM                            */
+} OCKAM_VAULT_AES_GCM_MODE_e;
+
+
+
 /*
  ********************************************************************************************************
  *                                               DATA TYPES                                             *
@@ -57,8 +70,8 @@ typedef enum {
  *******************************************************************************
  */
 typedef struct {
-    void* p_hw;                                                 /*!<  Hardware specific configuration                 */
-    void* p_sw;                                                 /*!<  Software library specific configuration         */
+    void* p_tpm;                                                /*!<  TPM specific configuration                      */
+    void* p_host;                                               /*!<  Host software library specific configuration    */
 } OCKAM_VAULT_CFG_s;
 
 
@@ -114,4 +127,27 @@ OCKAM_ERR ockam_vault_hkdf(uint8_t *p_salt,
                            uint32_t info_size,
                            uint8_t *p_out,
                            uint32_t out_size);
+
+OCKAM_ERR ockam_vault_aes_gcm(OCKAM_VAULT_AES_GCM_MODE_e mode,
+                              uint8_t *p_key, uint32_t key_size,
+                              uint8_t *p_iv, uint32_t iv_size,
+                              uint8_t *p_add, uint32_t add_size,
+                              uint8_t *p_tag, uint32_t tag_size,
+                              uint8_t *p_input, uint32_t input_size,
+                              uint8_t *p_output, uint32_t output_size);
+
+OCKAM_ERR ockam_vault_aes_gcm_encrypt(uint8_t *p_key, uint32_t key_size,
+                                      uint8_t *p_iv, uint32_t iv_size,
+                                      uint8_t *p_add, uint32_t add_size,
+                                      uint8_t *p_tag, uint32_t tag_size,
+                                      uint8_t *p_input, uint32_t input_size,
+                                      uint8_t *p_output, uint32_t output_size);
+
+OCKAM_ERR ockam_vault_aes_gcm_decrypt(uint8_t *p_key, uint32_t key_size,
+                                      uint8_t *p_iv, uint32_t iv_size,
+                                      uint8_t *p_add, uint32_t add_size,
+                                      uint8_t *p_tag, uint32_t tag_size,
+                                      uint8_t *p_input, uint32_t input_size,
+                                      uint8_t *p_output, uint32_t output_size);
+
 #endif
