@@ -76,11 +76,11 @@
 extern "C" {
 #endif
 
-OCKAM_ERR ockam_memory_init(void* p_buf);
+OCKAM_ERR ockam_mem_init(void* p_buf);
 
-OCKAM_ERR ockam_memory_alloc(void** p_buf, uint32_t size);
+OCKAM_ERR ockam_mem_alloc(void** p_buf, uint32_t size);
 
-OCKAM_ERR ockam_memory_free(void* p_buf);
+OCKAM_ERR ockam_mem_free(void* p_buf);
 
 
 #ifdef __cplusplus

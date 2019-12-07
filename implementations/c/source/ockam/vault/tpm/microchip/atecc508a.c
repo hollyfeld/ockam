@@ -44,8 +44,8 @@
 #define ATECC508A_RAND_SIZE                   32u               /* Size of the random number generated                */
 #define ATECC508A_PUB_KEY_SIZE                64u               /* Size of public key                                 */
 
-#define ATECC508A_KEY_SLOT_STATIC              0u               /* Slot with the preloaded private key                */
-#define ATECC508A_KEY_SLOT_EPHEMERAL   ATCA_TEMPKEY_KEYID       /* Slot with the generated ephemeral key              */
+#define ATECC508A_KEY_SLOT_STATIC             0u                /* Slot with the preloaded private key                */
+#define ATECC508A_KEY_SLOT_EPHEMERAL          1u                /* Slot with the generated ephemeral key              */
 
 
 #define ATECC508A_CFG_I2C_ENABLE_SHIFT        0u
@@ -290,17 +290,38 @@ OCKAM_ERR ockam_vault_tpm_random(uint8_t *p_rand_num, uint32_t rand_num_size)
 OCKAM_ERR ockam_vault_tpm_key_gen(OCKAM_VAULT_KEY_e key_type)
 {
     OCKAM_ERR ret_val = OCKAM_ERR_NONE;
+    ATCA_STATUS status;
+    uint8_t rand[32];
 
 
     do
     {
+        status = atcab_random((uint8_t*)&rand[0]);              /* Get a random number from the ATECC508A             */
+        if(status != ATCA_SUCCESS) {                            /* before a genkey operation.                         */
+            ret_val = OCKAM_ERR_VAULT_TPM_KEY_FAIL;
+            break;
+        }
+
+        status = atcab_nonce((const uint8_t *)&rand[0]);        /* Feed the random number back into the ATECC508A     */
+        if(status != ATCA_SUCCESS) {                            /* before a genkey operation.                         */
+            ret_val = OCKAM_ERR_VAULT_TPM_KEY_FAIL;
+            break;
+        }
+
         if(key_type == OCKAM_VAULT_KEY_STATIC) {                /* Static private key preloaded on ATECC508A          */
-            atcab_genkey(ATECC508A_KEY_SLOT_STATIC, 0);
+            status = atcab_genkey(ATECC508A_KEY_SLOT_STATIC, 0);
+            if(status != ATCA_SUCCESS) {
+                ret_val = OCKAM_ERR_VAULT_TPM_KEY_FAIL;
+                break;
+            }
         }
 
         else if(key_type == OCKAM_VAULT_KEY_EPHEMERAL) {        /* Generate a temp key                                */
-            atcab_genkey(ATECC508A_KEY_SLOT_EPHEMERAL, 0);
-            atcab_genkey(ATCA_TEMPKEY_KEYID, 0);
+            status = atcab_genkey(ATECC508A_KEY_SLOT_EPHEMERAL, 0);
+            if(status != ATCA_SUCCESS) {
+                ret_val = OCKAM_ERR_VAULT_TPM_KEY_FAIL;
+                break;
+            }
         }
 
         else {                                                  /* Invalid parameter, return an error                 */
@@ -329,7 +350,7 @@ OCKAM_ERR ockam_vault_tpm_key_get_pub(OCKAM_VAULT_KEY_e key_type,
 
     do
     {
-        if(p_pub_key == OCKAM_NULL) {                           /* Ensure the buffer isn't null                       */
+        if(p_pub_key == 0) {                                    /* Ensure the buffer isn't null                       */
             ret_val = OCKAM_ERR_INVALID_PARAM;
             break;
         }
@@ -341,8 +362,8 @@ OCKAM_ERR ockam_vault_tpm_key_get_pub(OCKAM_VAULT_KEY_e key_type,
 
         switch(key_type) {
             case OCKAM_VAULT_KEY_STATIC:                        /* Get the static public key                          */
-                status = atcab_genkey(ATECC508A_KEY_SLOT_STATIC,
-                                      p_pub_key);
+                status = atcab_get_pubkey(ATECC508A_KEY_SLOT_STATIC,
+                                          p_pub_key);
 
                 if(status != ATCA_SUCCESS) {
                     ret_val = OCKAM_ERR_VAULT_TPM_KEY_FAIL;
@@ -350,8 +371,8 @@ OCKAM_ERR ockam_vault_tpm_key_get_pub(OCKAM_VAULT_KEY_e key_type,
                 break;
 
             case OCKAM_VAULT_KEY_EPHEMERAL:                     /* Get the generated ephemeral public key             */
-                status = atcab_genkey(ATECC508A_KEY_SLOT_EPHEMERAL,
-                                       p_pub_key);
+                status = atcab_get_pubkey(ATECC508A_KEY_SLOT_EPHEMERAL,
+                                          p_pub_key);
 
                 if(status != ATCA_SUCCESS) {
                     ret_val = OCKAM_ERR_VAULT_TPM_KEY_FAIL;
@@ -413,8 +434,9 @@ OCKAM_ERR ockam_vault_tpm_ecdh(OCKAM_VAULT_KEY_e key_type,
 
             case OCKAM_VAULT_KEY_EPHEMERAL:                     /* Ephemeral key uses temp key slot on the ATECC508A  */
 
-                status = atcab_ecdh_tempkey(p_pub_key,
-                                            p_pms);
+                status = atcab_ecdh(ATECC508A_KEY_SLOT_EPHEMERAL,
+                                    p_pub_key,
+                                    p_pms);
                 if(status != ATCA_SUCCESS) {
                     ret_val = OCKAM_ERR_VAULT_TPM_ECDH_FAIL;
                 }

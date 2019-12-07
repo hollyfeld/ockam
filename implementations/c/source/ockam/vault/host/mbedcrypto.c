@@ -181,8 +181,8 @@ OCKAM_ERR ockam_vault_host_hkdf(uint8_t *p_salt, uint32_t salt_size,
 
 
     do {
-        if((p_ikm == OCKAM_NULL) || (ikm_size == 0) ||          /* Ensure the input key and output buffers are not    */
-            p_out == OCKAM_NULL || out_size  == 0) {            /* null and the size values are greater than zero     */
+        if((p_ikm == 0) || (ikm_size == 0) ||                   /* Ensure the input key and output buffers are not    */
+           (p_out == 0) || (out_size  == 0)) {                  /* null and the size values are greater than zero     */
             ret_val = OCKAM_ERR_INVALID_PARAM;
         }
 
@@ -239,11 +239,11 @@ OCKAM_ERR ockam_vault_host_aes_gcm(OCKAM_VAULT_AES_GCM_MODE_e mode,
 
 
     do {
-        if((p_key == OCKAM_NULL) || (key_size == 0) ||          /* Ensure there are no null buffers or sizes set to  */
-           (p_iv == OCKAM_NULL) || (iv_size == 0) ||            /* 0, every pointer needs to be valid and sizes must */
-           (p_tag == OCKAM_NULL) || (tag_size == 0) ||          /* always be greater than 0.                         */
-           (p_input == OCKAM_NULL) || (input_size == 0) ||
-           (p_output == OCKAM_NULL) || (output_size == 0)) {
+        if((p_key == 0) || (key_size == 0) ||                   /* Ensure there are no null buffers or sizes set to  */
+           (p_iv == 0) || (iv_size == 0) ||                     /* 0, every pointer needs to be valid and sizes must */
+           (p_tag == 0) || (tag_size == 0) ||                   /* always be greater than 0.                         */
+           (p_input == 0) || (input_size == 0) ||
+           (p_output == 0) || (output_size == 0)) {
             ret_val = OCKAM_ERR_INVALID_PARAM;
             break;
         }

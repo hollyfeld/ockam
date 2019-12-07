@@ -61,7 +61,7 @@
 
 typedef enum {
     TEST_ATECC508A_PUB_KEY_STATIC   = 0,                        /*!< Static Key in ATECC508A                          */
-    TEST_ATECC508A_PUB_KEY_EPHEMERAL,                           /*!< Ephemearl Key in ATECC508A                       */
+    TEST_ATECC508A_PUB_KEY_EPHEMERAL,                           /*!< Ephemeral Key in ATECC508A                       */
     TOTAL_TEST_ATECC508A_PUB_KEY                                /*!< Total number of keys handled                     */
 } TEST_ATECC508A_PUB_KEY_e;
 
@@ -88,7 +88,7 @@ ATCAIfaceCfg atca_iface_i2c = {
     .iface_type                 = ATCA_I2C_IFACE,
     .devtype                    = ATECC508A,
     {
-        .atcai2c.slave_address  = 0xC0,
+        .atcai2c.slave_address  = 0xB0,
         .atcai2c.bus            = 1,
         .atcai2c.baud           = 100000,
     },
@@ -193,8 +193,8 @@ void main (void)
     uint8_t pms_static[TEST_ATECC508A_PMS_SIZE];
     uint8_t pms_ephemeral[TEST_ATECC508A_PMS_SIZE];
 
-    uint8_t p_key_static = &g_pub_key[TEST_ATECC508A_PUB_KEY_STATIC];
-    uint8_t p_key_ephemeral = &g_pub_key[TEST_ATECC508A_PUB_KEY_EPHEMERAL];
+    uint8_t *p_key_static = &g_pub_key[TEST_ATECC508A_PUB_KEY_STATIC * TEST_ATECC508A_PUB_KEY_SIZE];
+    uint8_t *p_key_ephemeral = &g_pub_key[TEST_ATECC508A_PUB_KEY_EPHEMERAL * TEST_ATECC508A_PUB_KEY_SIZE];
 
 
     /* ---------- */
@@ -234,6 +234,8 @@ void main (void)
                               TEST_ATECC508A_PUB_KEY_SIZE);
     if(err != OCKAM_ERR_NONE) {
         printf("Error: Ockam Vault Static Key Generate Failed\r\n");
+    } else {
+        printf("Key: Sucessfully generated a static key\r\n");
     }
 
     err = ockam_vault_key_gen(OCKAM_VAULT_KEY_EPHEMERAL,        /* Generate an ephemrmal key                          */
@@ -241,6 +243,8 @@ void main (void)
                               TEST_ATECC508A_PUB_KEY_SIZE);
     if(err != OCKAM_ERR_NONE) {
         printf("Error: Ockam Vault Ephemeral Key Generate Failed\r\n");
+    } else {
+        printf("Key: Sucessfully generated an ephemeral key\r\n");
     }
 
     /* ------------ */
@@ -252,6 +256,9 @@ void main (void)
                                   TEST_ATECC508A_PUB_KEY_SIZE);
     if(err != OCKAM_ERR_NONE) {
         printf("Error: Ockam Vault Get Static Public Key Failed\r\n");
+    } else {
+        printf("Key: Sucessfully retrieved static key\r\n");
+        print_array(p_key_static, TEST_ATECC508A_PUB_KEY_SIZE);
     }
 
     err = ockam_vault_key_get_pub(OCKAM_VAULT_KEY_EPHEMERAL,    /* Get the ephemrmal public key                       */
@@ -259,6 +266,9 @@ void main (void)
                                   TEST_ATECC508A_PUB_KEY_SIZE);
     if(err != OCKAM_ERR_NONE) {
         printf("Error: Ockam Vault Get Ephemeral Public Key Failed\r\n");
+    } else {
+        printf("Key: Sucessfully retrieved ephemeral public key\r\n");
+        print_array(p_key_ephemeral, TEST_ATECC508A_PUB_KEY_SIZE);
     }
 
     /* ----------------- */
@@ -271,7 +281,10 @@ void main (void)
                            &pms_static[0],
                            TEST_ATECC508A_PMS_SIZE);
     if(err != OCKAM_ERR_NONE) {
-        printf("Error: Ockam Vault ECDH Failed\r\n");
+        printf("Error: Static Private/Ephemeral Public ECDH Failed\r\n");
+    } else {
+        printf("ECDH: Static Private/Ephemeral Public\r\n");
+        print_array(&pms_static[0], TEST_ATECC508A_PMS_SIZE);
     }
 
     err = ockam_vault_ecdh(OCKAM_VAULT_KEY_EPHEMERAL,          /* Calculate ECDH with static private/ephemeral pub    */
@@ -280,7 +293,10 @@ void main (void)
                            &pms_ephemeral[0],
                            TEST_ATECC508A_PMS_SIZE);
     if(err != OCKAM_ERR_NONE) {
-        printf("Error: Ockam Vault ECDH Failed\r\n");
+        printf("Error: Static Public/Ephemeral Private ECDH Failed\r\n");
+    } else {
+        printf("ECDH: Static Public/Ephemeral Private\r\n");
+        print_array(&pms_ephemeral[0], TEST_ATECC508A_PMS_SIZE);
     }
 
     for(i = 0; i < TEST_ATECC508A_PMS_SIZE; i++) {
@@ -296,9 +312,9 @@ void main (void)
 
     uint8_t hkdf_key[TEST_ATECC508A_HKDF_KEY_SIZE];
 
-    err = ockam_vault_hkdf(&g_protocol_salt,                    /* Calculate HKDF using shared secret and pub keys    */
+    err = ockam_vault_hkdf((uint8_t*)&g_protocol_salt,          /* Calculate HKDF using shared secret and pub keys    */
                             TEST_ATECC508A_PROTOCOL_SALT_SIZE,
-                           &pms_static,
+                           (uint8_t* )&pms_static,
                             TEST_ATECC508A_PMS_SIZE,
                            &g_pub_key[0],
                            (TEST_ATECC508A_PUB_KEY_SIZE * TOTAL_TEST_ATECC508A_PUB_KEY),
@@ -308,6 +324,7 @@ void main (void)
         printf("Error: Ockam Vault HKDF Failed\r\n");
         printf("Error Code: %08x\r\n", err);
     } else {
+        printf("HKDF Key: \r\n");
         print_array(&hkdf_key[0], 16);
     }
 

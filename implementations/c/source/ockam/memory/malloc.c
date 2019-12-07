@@ -1,7 +1,7 @@
 /**
  ********************************************************************************************************
  * @file        malloc.c
- * @brief   
+ * @brief
  ********************************************************************************************************
  */
 
@@ -73,9 +73,9 @@ OCKAM_KAL_MUTEX g_ockam_mem_mutex;
  * @brief   Initialize the Ockam Memory functions
  *
  * @param   p_buf[in]   The buffer to use as a chunk of memory to allocate from
- * 
+ *
  * @return  OCKAM_ERR_NONE on success.
- * 
+ *
  ********************************************************************************************************
  */
 
@@ -85,7 +85,7 @@ OCKAM_ERR ockam_mem_init(void* p_buf)
 
 
     do {
-        if(p_buf == OCKAM_NULL) {                               /* Ensure the buffer pointer is not null              */
+        if(p_buf == 0) {                                        /* Ensure the buffer pointer is not null              */
             ret_val = OCKAM_ERR_INVALID_PARAM;
             break;
         }
@@ -108,12 +108,12 @@ OCKAM_ERR ockam_mem_init(void* p_buf)
  *
  * @brief   Allocate the specified amount of memory
  *
- * @param   p_buf[out]  The pointer to place the address of the allocated memory in. 
+ * @param   p_buf[out]  The pointer to place the address of the allocated memory in.
  *
  * @param   size[in]    The number of bytes to allocate
- * 
+ *
  * @return  OCKAM_ERR_NONE on success. OCKAM_ERR_MEM_INSUFFICIENT when not enough space.
- * 
+ *
  ********************************************************************************************************
  */
 
@@ -130,7 +130,7 @@ OCKAM_ERR ockam_mem_alloc(void** p_buf, uint32_t size)
 
         *p_buf = malloc(size);                                  /* Attempt to malloc                                  */
 
-        if(*p_buf == OCKAM_NULL) {                              /* Check if we got a buffer                           */
+        if(*p_buf == 0) {                                       /* Check if we got a buffer                           */
             ret_val = OCKAM_ERR_MEM_UNAVAIL;
             break;
         }
@@ -149,7 +149,7 @@ OCKAM_ERR ockam_mem_alloc(void** p_buf, uint32_t size)
  * @param   p_buf[in]   Buffer address to free
  *
  * @return  OCKAM_ERR_NONE on success. OCKAM_ERR_MEM_INVALID_PTR if not a managed buffer.
- * 
+ *
  ********************************************************************************************************
  */
 
@@ -159,7 +159,7 @@ OCKAM_ERR ockam_mem_free(void* p_buf)
 
 
     do {
-        if(p_buf == OCKAM_NULL) {                               /* Ensure the buffer point is not null                */
+        if(p_buf == 0) {                                        /* Ensure the buffer point is not null                */
             ret_val = OCKAM_ERR_INVALID_PARAM;
             break;
         }
