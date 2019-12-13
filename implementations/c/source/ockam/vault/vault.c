@@ -105,12 +105,10 @@ OCKAM_ERR ockam_vault_init(OCKAM_VAULT_CFG_s *p_cfg)
             break;
         }
 
-                                                                /* Create a mutex for vault access                    */
-        ret_val = ockam_kal_mutex_init(&g_vault_mutex);
+        ret_val = ockam_kal_mutex_init(&g_vault_mutex);         /* Create a mutex for vault access                    */
         if(ret_val != OCKAM_ERR_NONE) {
             break;
         }
-
 
 #if(OCKAM_VAULT_CFG_INIT & OCKAM_VAULT_CFG_TPM)
         ret_val = ockam_vault_tpm_init(p_cfg->p_tpm);           /* Initialize the TPM code if needed                  */
@@ -349,7 +347,7 @@ OCKAM_ERR ockam_vault_ecdh(OCKAM_VAULT_KEY_e key_type,
         }
 
 #if(OCKAM_VAULT_CFG_KEY_ECDH & OCKAM_VAULT_CFG_TPM)
-        ret_val = ockam_vault_tpm_ecdh(key_type,                 /* Perform an ECDH operation in a TPM                 */
+        ret_val = ockam_vault_tpm_ecdh(key_type,                /* Perform an ECDH operation in a TPM                 */
                                        p_key_pub,
                                        key_pub_size,
                                        p_pms,
@@ -432,7 +430,7 @@ OCKAM_ERR ockam_vault_hkdf(uint8_t *p_salt,
                                        p_info, info_size,
                                        p_out, out_size);
 #elif(OCKAM_VAULT_CFG_HKDF & OCKAM_VAULT_CFG_HOST)
-        ret_val = ockam_vault_host_hkdf(p_salt, salt_size,        /* Perform an HKDF operation in the host library      */
+        ret_val = ockam_vault_host_hkdf(p_salt, salt_size,      /* Perform an HKDF operation in the host library      */
                                         p_ikm, ikm_size,
                                         p_info, info_size,
                                         p_out, out_size);

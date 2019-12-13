@@ -36,8 +36,8 @@
 #define TEST_ATECC508A_PMS_SIZE                     32u
 #define TEST_ATECC508A_PUB_KEY_SIZE                 64u
 #define TEST_ATECC508A_RAND_NUM_SIZE                32u
-#define TEST_ATECC508A_HKDF_KEY_SIZE                32u
-#define TEST_ATECC508A_PROTOCOL_SALT_SIZE           16u
+
+#define TEST_ATECC508A_HKDF_OUTPUT_KEY_SIZE         32u
 
 #define TEST_ATECC508A_AES_IV_SIZE                  12u
 #define TEST_ATECC508A_AES_ADD_SIZE                 20u
@@ -109,10 +109,30 @@ OCKAM_VAULT_CFG_s vault_cfg =
 
 uint8_t g_pub_key[TEST_ATECC508A_PUB_KEY_SIZE * TOTAL_TEST_ATECC508A_PUB_KEY];
 
-                                                                /* Global protocol salt defined for all Ockam comms   */
-uint8_t g_protocol_salt[TEST_ATECC508A_PROTOCOL_SALT_SIZE] = {
-    0xfb, 0x49, 0xc1, 0x74, 0x68, 0x73, 0xc7, 0xf9,
-    0x7b, 0x8f, 0x24, 0x5b, 0xdf, 0x77, 0xdb, 0xd8
+
+uint8_t g_hkdf_shared_secret[] = {
+    0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
+    0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
+    0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b
+};
+
+uint8_t g_hkdf_salt[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+	0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+	0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
+};
+
+uint8_t g_hkdf_info[] = {
+    0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7,
+    0xf8, 0xf9
+};
+
+uint8_t g_hkdf_output[] = {
+	0x01, 0x54, 0x1A, 0xB9, 0xF2, 0x90, 0x2B, 0x89,
+	0x03, 0x8D, 0xAB, 0x76, 0x8F, 0x17, 0x06, 0xB1,
+	0x5B, 0xF8, 0xE6, 0x50, 0x09, 0x5A, 0xF7, 0x80,
+	0x52, 0x00, 0x09, 0x75, 0x8F, 0x4B, 0x69, 0x0A,
 };
 
 uint8_t g_aes_key[TEST_ATECC508A_AES_KEY_SIZE] = {              /* Known AES test key value                           */
@@ -310,23 +330,37 @@ void main (void)
     /* HKDF Calculations */
     /* ----------------- */
 
-    uint8_t hkdf_key[TEST_ATECC508A_HKDF_KEY_SIZE];
+    int hkdf_cmp;
+    uint8_t hkdf_key[TEST_ATECC508A_HKDF_OUTPUT_KEY_SIZE] = {0};
 
-    err = ockam_vault_hkdf((uint8_t*)&g_protocol_salt,          /* Calculate HKDF using shared secret and pub keys    */
-                            TEST_ATECC508A_PROTOCOL_SALT_SIZE,
-                           (uint8_t* )&pms_static,
-                            TEST_ATECC508A_PMS_SIZE,
-                           &g_pub_key[0],
-                           (TEST_ATECC508A_PUB_KEY_SIZE * TOTAL_TEST_ATECC508A_PUB_KEY),
+    err = ockam_vault_hkdf(&g_hkdf_salt[0],              /* Calculate HKDF using test vectors                  */
+                           sizeof(g_hkdf_salt),
+                           &g_hkdf_shared_secret[0],
+                           sizeof(g_hkdf_shared_secret),
+                           &g_hkdf_info[0],
+                           sizeof(g_hkdf_info),
                            &hkdf_key[0],
-                            TEST_ATECC508A_HKDF_KEY_SIZE);
+                           TEST_ATECC508A_HKDF_OUTPUT_KEY_SIZE);
     if(err != OCKAM_ERR_NONE) {
         printf("Error: Ockam Vault HKDF Failed\r\n");
         printf("Error Code: %08x\r\n", err);
     } else {
-        printf("HKDF Key: \r\n");
-        print_array(&hkdf_key[0], 16);
+        hkdf_cmp = memcmp(&hkdf_key[0],
+                          &g_hkdf_output,
+                          TEST_ATECC508A_HKDF_OUTPUT_KEY_SIZE);
+        if(hkdf_cmp != 0) {
+            printf("Error: HDKF Key calculated incorrectly\r\n");
+        } else {
+            printf("HKDF Key Valid\r\n");
+        }
+
+        printf("Calculated HKDF Key: \r\n");
+        print_array(&hkdf_key[0], TEST_ATECC508A_HKDF_OUTPUT_KEY_SIZE);
+
+        printf("Expected HKDF Key: \r\n");
+        print_array(&g_hkdf_output[0], TEST_ATECC508A_HKDF_OUTPUT_KEY_SIZE);
     }
+
 
     /* -------------------- */
     /* AES GCM Calculations */
@@ -364,9 +398,9 @@ void main (void)
     }
 
     printf("Calculated Tag:\r\n");
-    print_array(&aes_tag[0], 16);
+    print_array(&aes_tag[0], TEST_ATECC508A_AES_TAG_SIZE);
     printf("Expected Tag:\r\n");
-    print_array(&g_aes_tag[0], 16);
+    print_array(&g_aes_tag[0], TEST_ATECC508A_AES_TAG_SIZE);
 
     ret = memcmp(&aes_encrypt_hash[0],                          /* Compare the computed hash with the expected hash   */
                  &g_aes_encrypt_hash[0],
@@ -377,9 +411,9 @@ void main (void)
         printf("AES GCM Encrypt Hash Valid\r\n");
     }
     printf("Calculated Hash:\r\n");
-    print_array(&aes_encrypt_hash[0], 60);
+    print_array(&aes_encrypt_hash[0], TEST_ATECC508A_AES_DATA_SIZE);
     printf("Expected Hash:\r\n");
-    print_array(&g_aes_encrypt_hash[0], 60);
+    print_array(&g_aes_encrypt_hash[0], TEST_ATECC508A_AES_DATA_SIZE);
 
     err = ockam_vault_aes_gcm_decrypt(&g_aes_key[0],            /* Test the decrypt function using known values       */
                                        TEST_ATECC508A_AES_KEY_SIZE,
@@ -408,9 +442,9 @@ void main (void)
     }
 
     printf("Decrypted Data: \r\n");
-    print_array(&aes_decrypt_data[0], 60);
+    print_array(&aes_decrypt_data[0], TEST_ATECC508A_AES_DATA_SIZE);
     printf("Expected Data: \r\n");
-    print_array(&g_aes_plain_text[0], 60);
+    print_array(&g_aes_plain_text[0], TEST_ATECC508A_AES_DATA_SIZE);
 
     return;
 }

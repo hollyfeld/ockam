@@ -44,9 +44,12 @@
 #define ATECC508A_RAND_SIZE                   32u               /* Size of the random number generated                */
 #define ATECC508A_PUB_KEY_SIZE                64u               /* Size of public key                                 */
 
+#define ATECC508A_SLOT_WRITE_SIZE_MIN         4u                /* Smallest write possible is 4 bytes                 */
+#define ATECC508A_SLOT_WRITE_SIZE_MAX        32u                /* Largest write possible is 32 bytes                 */
+#define ATECC508A_SLOT_OFFSET_MAX             8u
+
 #define ATECC508A_KEY_SLOT_STATIC             0u                /* Slot with the preloaded private key                */
 #define ATECC508A_KEY_SLOT_EPHEMERAL          1u                /* Slot with the generated ephemeral key              */
-
 
 #define ATECC508A_CFG_I2C_ENABLE_SHIFT        0u
 #define ATECC508A_CFG_I2C_ENABLE_SINGLE_WIRE  0u
@@ -75,6 +78,10 @@
 #define ATECC508A_CFG_LOCK_CONFIG_UNLOCKED    0x55              /* Config zone is in an unlocked/configurable state   */
 #define ATECC508A_CFG_LOCK_CONFIG_LOCKED      0x00              /* Config zone is in a locked/unconfigurable state    */
 
+#define ATECC508A_HKDF_SLOT                    9u               /* Use slot 9 for the HKDF key                        */
+#define ATECC508A_HKDF_SLOT_SIZE              72u               /* Slot 9 is 72 bytes                                 */
+#define ATECC508A_HKDF_UPDATE_SIZE            64u               /* HMAC updates MUST be 64 bytes                      */
+#define ATECC508A_HMAC_HASH_SIZE              32u               /* HMAC hash output size                              */
 
 /*
  ********************************************************************************************************
@@ -151,6 +158,16 @@ static ATECC508A_CFG_DATA_s *g_atecc508a_cfg_data;
  ********************************************************************************************************
  */
 
+OCKAM_ERR atecc508a_hkdf_write_key(uint8_t *p_key, uint32_t key_size,
+                                   uint8_t key_slot, uint32_t key_slot_size);
+
+OCKAM_ERR atecc508a_hkdf_extract(uint8_t *p_input, uint32_t input_size,
+                                 uint8_t key_slot);
+
+OCKAM_ERR atecc508a_hkdf_expand(uint8_t key_slot,
+                                uint8_t *p_info, uint32_t info_size,
+                                uint8_t *p_output, uint32_t output_size);
+
 
 /*
  ********************************************************************************************************
@@ -171,8 +188,8 @@ static ATECC508A_CFG_DATA_s *g_atecc508a_cfg_data;
 OCKAM_ERR ockam_vault_tpm_init(void *p_arg)
 {
     OCKAM_ERR ret_val = OCKAM_ERR_NONE;
-    ATCA_STATUS status;
-    VAULT_MICROCHIP_CFG_s *atecc508a_cfg;
+    ATCA_STATUS status = ATCA_SUCCESS;
+    VAULT_MICROCHIP_CFG_s *p_atecc508a_cfg;
 
 
     do {
@@ -181,10 +198,10 @@ OCKAM_ERR ockam_vault_tpm_init(void *p_arg)
             break;
         }
 
-        atecc508a_cfg = (VAULT_MICROCHIP_CFG_s*) p_arg;         /* Grab the vault configuration for the ATECC508A     */
+        p_atecc508a_cfg = (VAULT_MICROCHIP_CFG_s*) p_arg;       /* Grab the vault configuration for the ATECC508A     */
 
-        if(atecc508a_cfg->iface == VAULT_MICROCHIP_IFACE_I2C) {
-            status = atcab_init(atecc508a_cfg->iface_cfg);      /* Call Cryptolib to initialize the ATECC508A via I2C */
+        if(p_atecc508a_cfg->iface == VAULT_MICROCHIP_IFACE_I2C) {
+            status = atcab_init(p_atecc508a_cfg->iface_cfg);    /* Call Cryptolib to initialize the ATECC508A via I2C */
             if(status != ATCA_SUCCESS) {
                 ret_val = OCKAM_ERR_VAULT_TPM_INIT_FAIL;
                 break;
@@ -219,6 +236,7 @@ OCKAM_ERR ockam_vault_tpm_init(void *p_arg)
     return ret_val;
 }
 
+
 /*
  ********************************************************************************************************
  *                                          ockam_vault_tpm_free()
@@ -230,7 +248,8 @@ OCKAM_ERR ockam_vault_tpm_free (void)
    return OCKAM_ERR_NONE;
 }
 
-#endif
+#endif                                                          /* OCKAM_VAULT_CFG_INIT                               */
+
 
 /*
  ********************************************************************************************************
@@ -252,6 +271,7 @@ OCKAM_ERR ockam_vault_tpm_free (void)
 OCKAM_ERR ockam_vault_tpm_random(uint8_t *p_rand_num, uint32_t rand_num_size)
 {
     OCKAM_ERR ret_val = OCKAM_ERR_NONE;
+    ATCA_STATUS status = ATCA_SUCCESS;
 
 
     do {
@@ -260,12 +280,14 @@ OCKAM_ERR ockam_vault_tpm_random(uint8_t *p_rand_num, uint32_t rand_num_size)
             break;
         }
 
-        atcab_random(p_rand_num);                               /* Get a random number from the ATECC508A             */
+        status = atcab_random(p_rand_num);                      /* Get a random number from the ATECC508A             */
+        if(status != ATCA_SUCCESS) {
+            ret_val = OCKAM_ERR_VAULT_TPM_RAND_FAIL;
+        }
     } while (0);
 
     return ret_val;
 }
-
 
 #endif                                                          /* OCKAM_VAULT_CFG_RAND                               */
 
@@ -290,13 +312,13 @@ OCKAM_ERR ockam_vault_tpm_random(uint8_t *p_rand_num, uint32_t rand_num_size)
 OCKAM_ERR ockam_vault_tpm_key_gen(OCKAM_VAULT_KEY_e key_type)
 {
     OCKAM_ERR ret_val = OCKAM_ERR_NONE;
-    ATCA_STATUS status;
-    uint8_t rand[32];
+    ATCA_STATUS status = ATCA_SUCCESS;
+    uint8_t rand[ATECC508A_RAND_SIZE] = {0};
 
 
     do
     {
-        status = atcab_random((uint8_t*)&rand[0]);              /* Get a random number from the ATECC508A             */
+        status = atcab_random(&rand[0]);                        /* Get a random number from the ATECC508A             */
         if(status != ATCA_SUCCESS) {                            /* before a genkey operation.                         */
             ret_val = OCKAM_ERR_VAULT_TPM_KEY_FAIL;
             break;
@@ -341,10 +363,9 @@ OCKAM_ERR ockam_vault_tpm_key_gen(OCKAM_VAULT_KEY_e key_type)
  */
 
 OCKAM_ERR ockam_vault_tpm_key_get_pub(OCKAM_VAULT_KEY_e key_type,
-                                      uint8_t *p_pub_key,
-                                      uint32_t pub_key_size)
+                                      uint8_t *p_pub_key, uint32_t pub_key_size)
 {
-    ATCA_STATUS status;
+    ATCA_STATUS status = ATCA_SUCCESS;
     OCKAM_ERR ret_val = OCKAM_ERR_NONE;
 
 
@@ -396,13 +417,11 @@ OCKAM_ERR ockam_vault_tpm_key_get_pub(OCKAM_VAULT_KEY_e key_type,
  */
 
 OCKAM_ERR ockam_vault_tpm_ecdh(OCKAM_VAULT_KEY_e key_type,
-                               uint8_t *p_pub_key,
-                               uint32_t pub_key_size,
-                               uint8_t *p_pms,
-                               uint32_t pms_size)
+                               uint8_t *p_pub_key, uint32_t pub_key_size,
+                               uint8_t *p_pms, uint32_t pms_size)
 {
     OCKAM_ERR ret_val = OCKAM_ERR_NONE;
-    ATCA_STATUS status;
+    ATCA_STATUS status = ATCA_SUCCESS;
 
 
     do {
@@ -462,9 +481,313 @@ OCKAM_ERR ockam_vault_tpm_ecdh(OCKAM_VAULT_KEY_e key_type,
  ********************************************************************************************************
  */
 
-#if(OCKAM_VAULT_CFG_HKDF == OCKAM_VAULT_TPM_MICROCHIP_ATECC508A)
-#error "Error: OCKAM_VAULT_CFG_HKDF invalid for ATECC508A"
-#endif                                                          /* OCKAM_VAULT_CFG_HKDF                               */
+/**
+ ********************************************************************************************************
+ *                                        ockam_vault_tpm_ecdh()
+ ********************************************************************************************************
+ */
+
+OCKAM_ERR ockam_vault_tpm_hkdf(uint8_t *p_salt, uint32_t salt_size,
+                               uint8_t *p_ikm, uint32_t ikm_size,
+                               uint8_t *p_info, uint32_t info_size,
+                               uint8_t *p_out, uint32_t out_size)
+{
+    OCKAM_ERR ret_val = OCKAM_ERR_NONE;
+    ATCA_STATUS status = ATCA_SUCCESS;
+    uint8_t prk[ATECC508A_HKDF_PRK_SIZE];
+
+
+    do {
+        if(salt_size != ATECC508A_HKDF_SALT_SIZE) {             /* Salt is used as the key for HMAC operations. At    */
+            ret_val = OCKAM_ERR_INVALID_SIZE;                   /* the moment is seems the ATECC508A only accepts key */
+            break;                                              /* sizes of 32 bytes.                                 */
+        }
+
+        ret_val = atecc508a_hkdf_write_key(p_salt,              /* Salt must be written to the key slot before the    */
+                                           salt_size,           /* HMAC operation can be performed.                   */
+                                           ATECC508A_HKDF_SLOT,
+                                           ATECC508A_HKDF_SLOT_SIZE);
+        if(ret_val != OCKAM_ERR_NONE) {
+            break;
+        }
+
+        ret_val = atecc508a_hkdf_extract(p_ikm,                 /* Extract stage of HKDF. Output is the psuedo-random */
+                                         ikm_size,              /* key which is used in the expand stage.             */
+                                         &prk,
+                                         ATECC508A_HMAC_HASH_SIZE,
+                                         ATECC508A_HKDF_SLOT);
+        if(ret_val != OCKAM_ERR_NONE) {
+            break;
+        }
+
+        ret_val = atecc508a_hkdf_write_key(&prk[0],             /* Write the PRK into HKDF key slot for expand stage  */
+                                           ATECC508A_HMAC_HASH_SIZE,
+                                           ATECC508A_HKDF_SLOT,
+                                           ATECC508A_HKDF_SLOT_SIZE);
+        if(ret_val != OCKAM_ERR_NONE) {
+            break;
+        }
+
+        ret_val = atecc508a_hkdf_expand(ATECC508A_HKDF_SLOT,    /* Expand stage of HKDF. Uses the PRK from extract    */
+                                        p_info, info_size,      /* and outputs the key at the desired output size.    */
+                                        p_out, out_size);
+    } while(0);
+
+    return ret_val;
+}
+
+
+/*
+ ********************************************************************************************************
+ *                                    atecc508a_hkdf_write_key()
+ ********************************************************************************************************
+ */
+
+OCKAM_ERR atecc508a_hkdf_write_key(uint8_t *p_key, uint32_t key_size,
+                                   uint8_t key_slot, uint32_t key_slot_size)
+{
+    OCKAM_ERR ret_val = OCKAM_ERR_NONE;
+    ATCA_STATUS status = ATCA_SUCCESS;
+    uint8_t i = 0;
+    uint8_t slot_offset = 0;
+    uint8_t block_offset = 0;
+    uint8_t slot_write_4 = 0;
+    uint8_t slot_write_32 = 0;
+    uint8_t *p_key_buf = 0;
+    uint8_t *p_buf = 0;
+
+
+    do {
+        if(key_size > key_slot_size) {                          /* Ensure the key will fit in the specified slot      */
+            ret_val = OCKAM_ERR_INVALID_PARAM;
+            break;
+        }
+
+        ret_val = ockam_mem_alloc((void**)&p_key_buf,           /* Get a buffer for the full size of the key          */
+                                  key_slot_size);
+        if(ret_val != OCKAM_ERR_NONE) {
+            break;
+        }
+
+        p_buf = p_key_buf;										/* Save the p_key_buf address to free later           */
+
+        do {
+            ret_val = ockam_mem_copy(p_buf,                     /* Copy the key into the zero'd buffer                */
+                                     p_key,
+                                     key_size);
+            if(ret_val != OCKAM_ERR_NONE) {
+                break;
+            }
+                                                                /* Calculate how many 32 and 4 byte reads are needed  */
+            slot_write_32 = key_slot_size / ATECC508A_SLOT_WRITE_SIZE_MAX;
+            slot_write_4 = (key_slot_size % ATECC508A_SLOT_WRITE_SIZE_MAX) / ATECC508A_SLOT_WRITE_SIZE_MIN;
+
+            slot_offset = 0;                                    /* Always start at the 0 offset for the slot and block*/
+            block_offset = 0;
+
+            for(i = 0; i < slot_write_32; i++) {                /* Perform 32 byte writes first. Always increment the */
+                status = atcab_write_zone(ATCA_ZONE_DATA,       /* block offset after a 32 byte read but never adjust */
+                                          key_slot,             /* the slot offset.                                   */
+                                          block_offset,
+                                          slot_offset,
+                                          p_buf,
+                                          ATECC508A_SLOT_WRITE_SIZE_MAX);
+                if(status != ATCA_SUCCESS) {
+                    break;
+                }
+
+                block_offset++;
+                p_buf += ATECC508A_SLOT_WRITE_SIZE_MAX;
+            }
+
+            if(status != ATCA_SUCCESS) {                        /* Ensure the 32 byte writes were sucessful before    */
+                ret_val = OCKAM_ERR_VAULT_TPM_HKDF_FAIL;        /* attempting the 4 byte writes                       */
+                break;
+            }
+
+            for(i = 0; i < slot_write_4; i++) {                 /* Perform 4 block writes second. Always update the   */
+                status = atcab_write_zone(ATCA_ZONE_DATA,       /* slot offset after a write. If slot offset hits 32  */
+                                          key_slot,             /* reset and increment block offset.                  */
+                                          block_offset,
+                                          slot_offset,
+                                          p_buf,
+                                          ATECC508A_SLOT_WRITE_SIZE_MAX);
+                if(status != ATCA_SUCCESS) {
+                    break;
+                }
+
+                slot_offset++;                                  /* Adjust the offset and buffer pointer AFTER data    */
+                p_buf += ATECC508A_SLOT_WRITE_SIZE_MIN;         /* has been sucessfully written to the ATECC508A      */
+
+                if(slot_offset >= ATECC508A_SLOT_OFFSET_MAX) {  /* Always check the slot offset after its been        */
+                    slot_offset = 0;                            /* incremented                                        */
+                    block_offset++;
+                }
+            }
+
+            if(status != ATCA_SUCCESS) {                        /* Ensure the 4 byte writes were sucessful before     */
+                ret_val = OCKAM_ERR_VAULT_TPM_HKDF_FAIL;        /* proceeding, otherwise unknown data in HKDF slot    */
+                break;                                          /* may be used for HKDF                               */
+            }
+        } while(0);
+
+        ret_val = ockam_mem_free(p_key_buf);                    /* Free the allocated buffer                          */
+    } while(0);
+
+    return ret_val;
+}
+
+
+/*
+ ********************************************************************************************************
+ *                                      atecc508a_hkdf_extract()
+ ********************************************************************************************************
+ */
+
+OCKAM_ERR atecc508a_hkdf_extract(uint8_t *p_input, uint32_t input_size,
+                                 uint8_t key_slot)
+{
+    OCKAM_ERR ret_val = OCKAM_ERR_NONE;
+    ATCA_STATUS status = ATCA_SUCCESS;
+
+
+    do {
+        if(p_input == 0) {                                      /* Ensure input buffer is valid                       */
+            ret_val = OCKAM_ERR_INVALID_PARAM;
+            break;
+        }
+
+        status = atcab_sha_hmac(p_input,                        /* Run HMAC on the input data using the salt located  */
+                                input_size,                     /* in the HKDF key slot. Digest is returned to the    */
+                                key_slot,                       /* output buffer AND placed in TEMPKEY.               */
+                                &digest[0],
+                                SHA_MODE_TARGET_TEMPKEY);
+        if(status != ATCA_SUCCESS)
+        {
+            ret_val = OCKAM_ERR_VAULT_TPM_HKDF_FAIL;
+            break;
+        }
+    } while (0);
+
+    return ret_val;
+}
+
+
+/*
+ ********************************************************************************************************
+ *                                      atecc508a_hkdf_expand()
+ ********************************************************************************************************
+ */
+
+OCKAM_ERR atecc508a_hkdf_expand(uint8_t key_slot,
+                                uint8_t *p_info, uint32_t info_size,
+                                uint8_t *p_output, uint32_t output_size)
+{
+    OCKAM_ERR ret_val = OCKAM_ERR_NONE;
+    ATCA_STATUS status = ATCA_SUCCESS;
+    uint8_t i = 0;
+    uint8_t iterations = 0;
+    uint32_t bytes_written = 0;
+    uint32_t bytes_to_copy = 0;
+    uint32_t digest_len = 0;
+    atca_hmac_sha256_ctx_t *p_ctx = 0;
+    uint8_t digest[ATECC508A_HMAC_HASH_SIZE] = {0};
+
+
+    do {
+        if(p_output == 0) {                                     /* Must have a valid output buffer, info is optional  */
+            ret_val = OCKAM_ERR_INVALID_PARAM;
+            break;
+        }
+
+        if((p_info == 0) && (info_size > 0)) {                  /* Info size must be 0 if info pointer is null        */
+            ret_val = OCKAM_ERR_INVALID_SIZE;
+        }
+
+        iterations  = output_size / ATECC508A_HMAC_HASH_SIZE;   /* Determine how many expand iterations are needed    */
+        if(output_size % ATECC508A_HMAC_HASH_SIZE) {
+            iterations++;
+        }
+
+        if(iterations > 255) {                                  /* RFC 5869 Section 2.3, output size can not be       */
+            ret_val = OCKAM_ERR_INVALID_SIZE;                   /* greater than 255 times the hash length             */
+            break;
+        }
+
+        for(i = 1; i <= iterations; i++) {
+            uint8_t c = i & 0xFF;                               /* Set the constant based off the iteration count     */
+
+            ret_val = ockam_mem_alloc((void**)&p_ctx,           /* Allocate HMAC/SHA256 context buffer each iteration */
+                                      sizeof(atca_hmac_sha256_ctx_t));
+            if(ret_val != OCKAM_ERR_NONE) {
+                break;
+            }
+
+            status = atcab_sha_hmac_init(p_ctx, key_slot);      /* Initialize HMAC specifying the key slot. The       */
+            if(status != ATCA_SUCCESS) {                        /* digest from the extract stage must have already    */
+                ret_val = OCKAM_ERR_VAULT_TPM_HKDF_FAIL;        /* been placed into the HKDF key slot BEFORE expand.  */
+                break;
+            }
+
+            if(digest_len > 0) {                                /* Only add digest buffer after the first iteration   */
+                status = atcab_sha_hmac_update(p_ctx,
+                                               &digest[0],
+                                               digest_len);
+                if(status != ATCA_SUCCESS) {
+                    ret_val = OCKAM_ERR_VAULT_TPM_HKDF_FAIL;
+                    break;
+                }
+            }
+
+            status = atcab_sha_hmac_update(p_ctx,               /* Add the info context every iteration               */
+                                           p_info,
+                                           info_size);
+            if(status != ATCA_SUCCESS) {
+                ret_val = OCKAM_ERR_VAULT_TPM_HKDF_FAIL;
+                break;
+            }
+
+            status = atcab_sha_hmac_update(p_ctx, &c, 1);       /* Always add the constant last for every iteration   */
+            if(status != ATCA_SUCCESS) {
+                ret_val = OCKAM_ERR_VAULT_TPM_HKDF_FAIL;
+                break;
+            }
+
+            status = atcab_sha_hmac_finish(p_ctx,               /* Finish the HMAC calculation. Output the digest to  */
+                                           &digest[0],          /* the local buffer and TEMPKEY buffer.               */
+                                           SHA_MODE_TARGET_TEMPKEY);
+            if(status != ATCA_SUCCESS) {
+                ret_val = OCKAM_ERR_VAULT_TPM_HKDF_FAIL;
+                break;
+            }
+
+            if(i != iterations) {                               /* If there are more iterations, copy the entire      */
+                bytes_to_copy = ATECC508A_HMAC_HASH_SIZE;       /* digest to the output                               */
+            } else {                                            /* Otherwise, only copy the necessary remaining       */
+                bytes_to_copy = output_size - bytes_written;    /* bytes to the output buffer.                        */
+            }
+
+            ret_val = ockam_mem_copy((p_output + bytes_written),/* Copy digest data to the output buffer at the       */
+                                     &digest[0],                /* specified offset based on past writes.             */
+                                     bytes_to_copy);
+            if(ret_val != OCKAM_ERR_NONE) {
+                break;
+            }
+
+            bytes_written += bytes_to_copy;                     /* Update bytes been written for future offsets and   */
+            digest_len = bytes_to_copy;                         /* set digest len so its included next iteration      */
+
+            ockam_mem_free(p_ctx);                              /* Free the context buffer after every iteration.     */
+            p_ctx = 0;											/* Clear the pointer value after freeing to prevent   */
+        }                                                       /* a double free.                                     */
+
+        if(p_ctx) {                                             /* If an error occured in the loop and we exited      */
+            ockam_mem_free(p_ctx);                              /* early, ensure the buffer is freed.                 */
+        }
+    } while(0);
+
+    return ret_val;
+}
 
 
 /*
@@ -478,4 +801,5 @@ OCKAM_ERR ockam_vault_tpm_ecdh(OCKAM_VAULT_KEY_e key_type,
 #if(OCKAM_VAULT_CFG_AES_GCM == OCKAM_VAULT_TPM_MICROCHIP_ATECC508A)
 #error "Error: OCKAM_VAULT_CFG_AES_GCM invalid for ATECC508A"
 #endif                                                          /* OCKAM_VAULT_CFG_AES_GCM                            */
+
 

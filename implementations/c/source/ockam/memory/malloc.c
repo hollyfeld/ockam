@@ -12,6 +12,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include <ockam/define.h>
 #include <ockam/error.h>
@@ -165,6 +166,43 @@ OCKAM_ERR ockam_mem_free(void* p_buf)
         }
 
         free(p_buf);                                            /* Free the buffer                                    */
+
+    } while(0);
+
+    return ret_val;
+}
+
+
+/**
+ ********************************************************************************************************
+ *                                          ockam_mem_copy()
+ *
+ * @brief   Free the specified memory buffer
+ *
+ * @param   p_target[in]    Buffer address to write data to
+ *
+ * @param   p_source[in]    Buffer address to get data to write from
+ *
+ * @param   length          Amount of data to copy
+ *
+ * @return  OCKAM_ERR_NONE on success.
+ *
+ ********************************************************************************************************
+ */
+
+OCKAM_ERR ockam_mem_copy(void* p_target,
+                         void* p_source,
+                         uint32_t length)
+{
+    OCKAM_ERR ret_val = OCKAM_ERR_NONE;
+
+    do {
+        if((p_target == 0) || (p_source == 0)) {                /* Target and source MUST be valid buffers            */
+            ret_val = OCKAM_ERR_INVALID_PARAM;
+            break;
+        }
+
+        memcpy(p_target, p_source, length);
 
     } while(0);
 

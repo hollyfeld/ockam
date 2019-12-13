@@ -82,6 +82,8 @@ OCKAM_ERR ockam_mem_alloc(void** p_buf, uint32_t size);
 
 OCKAM_ERR ockam_mem_free(void* p_buf);
 
+OCKAM_ERR ockam_mem_copy(void* p_target, void* p_source, uint32_t length);
+
 
 #ifdef __cplusplus
 }
