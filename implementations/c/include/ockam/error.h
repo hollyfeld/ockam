@@ -32,8 +32,8 @@
 typedef enum {
     OCKAM_ERR_NONE                                    = 0x0000, /*!< No error                                         */
 
-    OCKAM_ERR_INVALID_PARAM                           = 0x0010, /*!< Invalid parameter specified                      */
-    OCKAM_ERR_INVALID_CFG                             = 0x0011, /*!< Invalid configuration specified                  */
+    OCKAM_ERR_INVALID_PARAM                           = 0x0011, /*!< Invalid parameter specified                      */
+    OCKAM_ERR_INVALID_CFG                             = 0x0012, /*!< Invalid configuration specified                  */
     OCKAM_ERR_INVALID_SIZE                            = 0x0013, /*!< Invalid size specified                           */
 
     OCKAM_ERR_MEM_INSUFFICIENT                        = 0x0080, /*!< Insufficent space for a memory allocation        */
@@ -48,14 +48,15 @@ typedef enum {
     OCKAM_ERR_VAULT_INVALID_BUFFER_SIZE               = 0x0106, /*!< Supplied buffer size is invalid for call         */
 
     OCKAM_ERR_VAULT_TPM_INIT_FAIL                     = 0x0201, /*!< TPM failed to initialize                         */
-    OCKAM_ERR_VAULT_TPM_KEY_FAIL                      = 0x0202, /*!< Key failure in vault                             */
-    OCKAM_ERR_VAULT_TPM_ECDH_FAIL                     = 0x0203, /*!< ECDH failed to complete successfully             */
-    OCKAM_ERR_VAULT_TPM_HKDF_FAIL                     = 0x0204, /*!< HKDF failed to complete successfully             */
-    OCKAM_ERR_VAULT_TPM_AES_FAIL                      = 0x0205, /*!< AES failed to complete successfully              */
-    OCKAM_ERR_VAULT_TPM_ID_FAIL                       = 0x0206, /*!< Hardware identification failed                   */
-    OCKAM_ERR_VAULT_TPM_ID_INVALID                    = 0x0207, /*!< Specified hardware is not the expected hardware  */
-    OCKAM_ERR_VAULT_TPM_UNLOCKED                      = 0x0208, /*!< The hardware configuration is unlocked           */
-    OCKAM_ERR_VAULT_TPM_UNSUPPORTED_IFACE             = 0x0209, /*!< The specified interface is not supported         */
+    OCKAM_ERR_VAULT_TPM_RAND_FAIL                     = 0x0202, /*!< Random number generator failure                  */
+    OCKAM_ERR_VAULT_TPM_KEY_FAIL                      = 0x0203, /*!< Key failure in vault                             */
+    OCKAM_ERR_VAULT_TPM_ECDH_FAIL                     = 0x0204, /*!< ECDH failed to complete successfully             */
+    OCKAM_ERR_VAULT_TPM_HKDF_FAIL                     = 0x0205, /*!< HKDF failed to complete successfully             */
+    OCKAM_ERR_VAULT_TPM_AES_FAIL                      = 0x0206, /*!< AES failed to complete successfully              */
+    OCKAM_ERR_VAULT_TPM_ID_FAIL                       = 0x0207, /*!< Hardware identification failed                   */
+    OCKAM_ERR_VAULT_TPM_ID_INVALID                    = 0x0208, /*!< Specified hardware is not the expected hardware  */
+    OCKAM_ERR_VAULT_TPM_UNLOCKED                      = 0x0209, /*!< The hardware configuration is unlocked           */
+    OCKAM_ERR_VAULT_TPM_UNSUPPORTED_IFACE             = 0x020A, /*!< The specified interface is not supported         */
 
     OCKAM_ERR_VAULT_HOST_INIT_FAIL                    = 0x0301, /*!< Host software library failed to initialize       */
     OCKAM_ERR_VAULT_HOST_KEY_FAIL                     = 0x0302, /*!< Key failure in software                          */

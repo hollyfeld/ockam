@@ -162,6 +162,7 @@ OCKAM_ERR atecc508a_hkdf_write_key(uint8_t *p_key, uint32_t key_size,
                                    uint8_t key_slot, uint32_t key_slot_size);
 
 OCKAM_ERR atecc508a_hkdf_extract(uint8_t *p_input, uint32_t input_size,
+                                 uint8_t *p_prk, uint32_t prk_size,
                                  uint8_t key_slot);
 
 OCKAM_ERR atecc508a_hkdf_expand(uint8_t key_slot,
@@ -494,12 +495,12 @@ OCKAM_ERR ockam_vault_tpm_hkdf(uint8_t *p_salt, uint32_t salt_size,
 {
     OCKAM_ERR ret_val = OCKAM_ERR_NONE;
     ATCA_STATUS status = ATCA_SUCCESS;
-    uint8_t prk[ATECC508A_HKDF_PRK_SIZE];
+    uint8_t prk[ATECC508A_HMAC_HASH_SIZE];
 
 
     do {
-        if(salt_size != ATECC508A_HKDF_SALT_SIZE) {             /* Salt is used as the key for HMAC operations. At    */
-            ret_val = OCKAM_ERR_INVALID_SIZE;                   /* the moment is seems the ATECC508A only accepts key */
+        if(salt_size != ATECC508A_HMAC_HASH_SIZE) {             /* Salt is used as the key for HMAC operations. At    */
+            ret_val = OCKAM_ERR_VAULT_SIZE_MISMATCH;            /* the moment is seems the ATECC508A only accepts key */
             break;                                              /* sizes of 32 bytes.                                 */
         }
 
@@ -645,6 +646,7 @@ OCKAM_ERR atecc508a_hkdf_write_key(uint8_t *p_key, uint32_t key_size,
  */
 
 OCKAM_ERR atecc508a_hkdf_extract(uint8_t *p_input, uint32_t input_size,
+                                 uint8_t *p_prk, uint32_t prk_size,
                                  uint8_t key_slot)
 {
     OCKAM_ERR ret_val = OCKAM_ERR_NONE;
@@ -657,10 +659,14 @@ OCKAM_ERR atecc508a_hkdf_extract(uint8_t *p_input, uint32_t input_size,
             break;
         }
 
+        if(prk_size != ATECC508A_HMAC_HASH_SIZE) {              /* PRK buffer must be length of the hash output       */
+            ret_val = OCKAM_ERR_VAULT_SIZE_MISMATCH;
+        }
+
         status = atcab_sha_hmac(p_input,                        /* Run HMAC on the input data using the salt located  */
                                 input_size,                     /* in the HKDF key slot. Digest is returned to the    */
                                 key_slot,                       /* output buffer AND placed in TEMPKEY.               */
-                                &digest[0],
+                                p_prk,
                                 SHA_MODE_TARGET_TEMPKEY);
         if(status != ATCA_SUCCESS)
         {
